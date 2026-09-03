@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -45,9 +46,81 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _selectImageSource() async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pilih Sumber Bukti Transfer',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Wajib dilampirkan agar kasir dapat memverifikasi kesesuaian pembayaran pelanggan.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2FF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4F46E5)),
+                ),
+                title: const Text('Ambil Foto Kamera', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: const Text('Foto langsung struk atau layar m-banking pelanggan', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(bCtx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF16A34A)),
+                ),
+                title: const Text('Pilih dari Galeri / File', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: const Text('Unggah screenshot atau file foto bukti bayar', style: TextStyle(fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(bCtx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
     try {
-      final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+      final picked = await _picker.pickImage(source: source, imageQuality: 75);
       if (picked != null) {
         setState(() {
           _proofImage = picked;
@@ -55,11 +128,372 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
       }
     } catch (e) {
       debugPrint('Error picking image: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil gambar: $e')),
+        );
+      }
     }
+  }
+
+  void _showProofPreviewDialog(BuildContext context) {
+    if (_proofImage == null) return;
+    showDialog(
+      context: context,
+      builder: (dCtx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 500, maxHeight: 680),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0F172A),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 24)],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  color: const Color(0xFF1E293B),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 20),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Pemeriksaan Bukti Transfer',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                        onPressed: () => Navigator.pop(dCtx),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: Container(
+                    color: Colors.black,
+                    width: double.infinity,
+                    child: InteractiveViewer(
+                      minScale: 0.5,
+                      maxScale: 4.0,
+                      child: kIsWeb
+                          ? Image.network(_proofImage!.path, fit: BoxFit.contain)
+                          : Image.file(File(_proofImage!.path), fit: BoxFit.contain),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  color: const Color(0xFF1E293B),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.pinch_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Periksa nominal uang, nama pengirim, dan tanggal transfer.',
+                          style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                        ),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF10B981),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        onPressed: () => Navigator.pop(dCtx),
+                        child: const Text('Sudah Sesuai', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProofUploadSection(double total, String formattedTotal) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.verified_user_rounded, color: Color(0xFF4F46E5), size: 18),
+            const SizedBox(width: 8),
+            const Text(
+              'Bukti Pembayaran / Transfer',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0F172A)),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.red.shade300),
+              ),
+              child: Text(
+                'WAJIB DIISI',
+                style: TextStyle(
+                  color: Colors.red.shade700,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Wajib lampirkan foto struk/m-banking untuk verifikasi nominal ($formattedTotal) sebelum pesanan diproses.',
+          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 12),
+
+        if (_proofImage == null) ...[
+          // Belum Upload Bukti
+          InkWell(
+            onTap: _selectImageSource,
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.amber.shade400, width: 1.5),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.add_a_photo_rounded, size: 30, color: Colors.amber.shade900),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Ambil Foto Struk atau Upload Bukti Transfer',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1E293B)),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Klik di sini untuk memilih Kamera atau Galeri / File',
+                    style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildSourceChip(Icons.camera_alt_rounded, 'Foto Kamera Langsung'),
+                      const SizedBox(width: 8),
+                      _buildSourceChip(Icons.photo_library_rounded, 'Pilih Galeri / File'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ] else ...[
+          // Sudah Upload Bukti - Preview Card
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF86EFAC), width: 1.5),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Image Thumbnail with Zoom Prompt
+                    GestureDetector(
+                      onTap: () => _showProofPreviewDialog(context),
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: 72,
+                              height: 72,
+                              child: kIsWeb
+                                  ? Image.network(_proofImage!.path, fit: BoxFit.cover)
+                                  : Image.file(File(_proofImage!.path), fit: BoxFit.cover),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.only(topLeft: Radius.circular(8)),
+                            ),
+                            child: const Icon(Icons.zoom_in, color: Colors.white, size: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Details & Actions
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFDCFCE7),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 12),
+                                SizedBox(width: 4),
+                                Text(
+                                  'BUKTI TERLAMPIR',
+                                  style: TextStyle(color: Color(0xFF16A34A), fontWeight: FontWeight.bold, fontSize: 10),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            _proofImage!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Color(0xFF0F172A)),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              FilledButton.tonalIcon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF4F46E5).withValues(alpha: 0.12),
+                                  foregroundColor: const Color(0xFF4F46E5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: const Icon(Icons.fullscreen_rounded, size: 16),
+                                label: const Text('Periksa Bukti', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                onPressed: () => _showProofPreviewDialog(context),
+                              ),
+                              const SizedBox(width: 8),
+                              OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                icon: const Icon(Icons.refresh_rounded, size: 14),
+                                label: const Text('Ganti', style: TextStyle(fontSize: 11)),
+                                onPressed: _selectImageSource,
+                              ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                                tooltip: 'Hapus bukti',
+                                onPressed: () => setState(() => _proofImage = null),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF16A34A)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Klik "Periksa Bukti" untuk melihat gambar penuh dan mencocokkan nominal.',
+                          style: TextStyle(fontSize: 11, color: Colors.green.shade800),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSourceChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: const Color(0xFF4F46E5)),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF475569))),
+        ],
+      ),
+    );
   }
 
   Future<void> _finishTransaction(PaymentMethod method) async {
     if (_isProcessing) return;
+
+    // VALIDASI WAJIB BUKTI TRANSFER UNTUK METODE NON-TUNAI
+    if (method == PaymentMethod.transfer || method == PaymentMethod.qris) {
+      if (_proofImage == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Wajib melampirkan foto bukti transfer untuk metode ${method == PaymentMethod.qris ? "QRIS" : "Transfer Bank"}!',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _selectImageSource();
+        return;
+      }
+    }
+
     setState(() => _isProcessing = true);
 
     final cart = context.read<CartProvider>();
@@ -78,18 +512,22 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
         final ext = _proofImage!.name.split('.').last;
         final fileName = 'proof_${DateTime.now().millisecondsSinceEpoch}.$ext';
         
-        await SupabaseConfig.client.storage
-            .from('payment_proofs')
-            .uploadBinary(fileName, bytes);
-            
-        proofUrl = SupabaseConfig.client.storage
-            .from('payment_proofs')
-            .getPublicUrl(fileName);
-      } catch (e) {
-        debugPrint('Error uploading proof: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Catatan bukti bayar: $e')));
+        try {
+          await SupabaseConfig.client.storage
+              .from('payment_proofs')
+              .uploadBinary(fileName, bytes);
+              
+          proofUrl = SupabaseConfig.client.storage
+              .from('payment_proofs')
+              .getPublicUrl(fileName);
+        } catch (uploadErr) {
+          debugPrint('Upload to Supabase storage error: $uploadErr');
+          // Fallback: simpan sebagai data URI Base64 agar bukti TIDAK PERNAH HILANG meski Supabase offline
+          final base64String = base64Encode(bytes);
+          proofUrl = 'data:image/$ext;base64,$base64String';
         }
+      } catch (e) {
+        debugPrint('Error reading proof bytes: $e');
       }
     }
 
@@ -154,347 +592,385 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                 children: [
                   CircularProgressIndicator(),
                   SizedBox(height: 16),
-                  Text('Menyimpan Transaksi...', style: TextStyle(fontWeight: FontWeight.w600)),
+                  Text('Memproses transaksi & menyimpan bukti...', style: TextStyle(fontWeight: FontWeight.w600)),
                 ],
               ),
             )
-          : Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${cart.orderType} ${cart.tableNumber != null ? "• Meja ${cart.tableNumber}" : ""}',
-                            style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+          : SafeArea(
+              child: Column(
+                children: [
+                  // Total Banner
+                  Container(
+                    width: double.infinity,
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
+                    child: Column(
+                      children: [
+                        const Text('Total Tagihan', style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(
+                          currency.format(total),
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                          const Text('Tagihan Total', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      Text(
-                        currency.format(total),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
+
+                  // Tab Pilihan
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Theme.of(context).colorScheme.primary,
+                    indicatorWeight: 3,
+                    tabs: const [
+                      Tab(icon: Icon(Icons.money), text: 'Tunai'),
+                      Tab(icon: Icon(Icons.account_balance), text: 'Transfer'),
+                      Tab(icon: Icon(Icons.qr_code_2), text: 'QRIS'),
                     ],
                   ),
-                ),
-                TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Tunai', icon: Icon(Icons.payments_outlined)),
-                    Tab(text: 'Transfer', icon: Icon(Icons.account_balance_outlined)),
-                    Tab(text: 'QRIS', icon: Icon(Icons.qr_code_2)),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      // 1. Tunai Tab
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            TextField(
-                              controller: _cashController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Uang Tunai Diterima',
-                                prefixText: 'Rp ',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // 1. Tunai Tab
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              TextField(
+                                controller: _cashController,
+                                keyboardType: TextInputType.number,
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                decoration: const InputDecoration(
+                                  labelText: 'Uang Diterima',
+                                  prefixText: 'Rp ',
+                                  border: OutlineInputBorder(),
+                                ),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _cashReceived = double.tryParse(val) ?? 0;
+                                  });
+                                },
                               ),
-                              onChanged: (val) {
-                                setState(() {
-                                  _cashReceived = double.tryParse(val) ?? 0;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              children: [total, 50000, 100000, 200000].map((nominal) {
-                                return ActionChip(
-                                  label: Text(nominal == total ? 'Uang Pas' : currency.format(nominal)),
-                                  onPressed: () {
-                                    _cashController.text = nominal.toInt().toString();
-                                    setState(() => _cashReceived = nominal.toDouble());
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.shade200),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              const SizedBox(height: 16),
+                              // Shortcut uang pas & pecahan umum
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
                                 children: [
-                                  const Text('Kembalian:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  Text(
-                                    currency.format(_cashReceived >= total ? _cashReceived - total : 0),
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                                  ActionChip(
+                                    label: const Text('Uang Pas'),
+                                    onPressed: () {
+                                      setState(() {
+                                        _cashReceived = total;
+                                        _cashController.text = total.toInt().toString();
+                                      });
+                                    },
                                   ),
+                                  ...[10000, 20000, 50000, 100000].map((nominal) {
+                                    if (nominal >= total) {
+                                      return ActionChip(
+                                        label: Text(currency.format(nominal)),
+                                        onPressed: () {
+                                          setState(() {
+                                            _cashReceived = nominal.toDouble();
+                                            _cashController.text = nominal.toString();
+                                          });
+                                        },
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  }),
                                 ],
                               ),
-                            ),
-                            const SizedBox(height: 24),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: _cashReceived >= total ? () => _finishTransaction(PaymentMethod.cash) : null,
-                              child: const Text('Bayar Tunai & Cetak Struk', style: TextStyle(fontWeight: FontWeight.bold)),
-                            )
-                          ],
-                        ),
-                      ),
-
-                      // 2. Transfer Bank Tab
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            const Card(
-                              child: ListTile(
-                                leading: Icon(Icons.account_balance, color: Color(0xFF4F46E5)),
-                                title: Text('BCA Virtual Account', style: TextStyle(fontWeight: FontWeight.bold)),
-                                subtitle: Text('8801 2938 1029 4812 (a.n. Kopi Nusantara)'),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text('Bukti Transfer / Screenshot', style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            InkWell(
-                              onTap: _pickImage,
-                              child: Container(
-                                height: 120,
-                                width: double.infinity,
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
                                 ),
-                                child: _proofImage != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: kIsWeb 
-                                          ? Image.network(_proofImage!.path, fit: BoxFit.cover)
-                                          : Image.file(File(_proofImage!.path), fit: BoxFit.cover),
-                                      )
-                                    : const Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.grey),
-                                          SizedBox(height: 8),
-                                          Text('Upload Bukti Bayar', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                        ],
-                                      ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Kembalian:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                    Text(
+                                      currency.format(_cashReceived >= total ? _cashReceived - total : 0),
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const Spacer(),
+                              const Spacer(),
                               SizedBox(
                                 width: double.infinity,
                                 height: 50,
                                 child: FilledButton(
-                                  style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                                  onPressed: () => _finishTransaction(PaymentMethod.transfer),
-                                  child: const Text('Konfirmasi Transfer Lunas', style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                              )
-                          ],
-                        ),
-                      ),
-
-                      // 3. QRIS Dinamis Tab
-                      Builder(
-                        builder: (context) {
-                          final settings = context.watch<SettingsProvider>().settings;
-                          final baseStaticQris = settings.qrisString.isNotEmpty
-                              ? settings.qrisString
-                              : QrisHelper.defaultStaticQris;
-                          final dynamicQris = QrisHelper.convertToDynamic(
-                            baseStaticQris,
-                            total,
-                          );
-                          final qrisInfo = QrisHelper.parseQrisInfo(dynamicQris);
-
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              children: [
-                                Card(
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    side: BorderSide(color: Colors.grey.shade300),
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).colorScheme.primary),
-                                            const SizedBox(width: 8),
-                                            const Text(
-                                              'QRIS DINAMIS',
-                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '${qrisInfo['merchant_name']} • NMID: ${qrisInfo['nmid']}',
-                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
-                                        ),
-                                        Text(
-                                          '${qrisInfo['city']} (${qrisInfo['postal_code']})',
-                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
-                                        ),
-                                        const Divider(height: 20),
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(color: Colors.grey.shade200),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withValues(alpha: 0.04),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: QrImageView(
-                                            data: dynamicQris,
-                                            version: QrVersions.auto,
-                                            size: 200.0,
-                                            backgroundColor: Colors.white,
-                                            errorCorrectionLevel: QrErrorCorrectLevel.M,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Column(
+                                  onPressed: _cashReceived >= total ? () => _finishTransaction(PaymentMethod.cash) : null,
+                                  child: const Text('Bayar Tunai & Cetak Struk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // 2. Transfer Bank Tab
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Card(
+                                child: ListTile(
+                                  leading: Icon(Icons.account_balance, color: Color(0xFF4F46E5)),
+                                  title: Text('BCA Virtual Account', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  subtitle: Text('8801 2938 1029 4812 (a.n. Kopi Nusantara)'),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // BUKTI TRANSFER SECTION (WAJIB)
+                              _buildProofUploadSection(total, currency.format(total)),
+
+                              const SizedBox(height: 28),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _proofImage != null ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  icon: Icon(
+                                    _proofImage != null ? Icons.check_circle_rounded : Icons.add_photo_alternate_rounded,
+                                    size: 20,
+                                  ),
+                                  label: Text(
+                                    _proofImage != null ? 'Konfirmasi Transfer Lunas & Cetak' : 'Lampirkan Bukti Transfer Dahulu',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  ),
+                                  onPressed: () {
+                                    if (_proofImage == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: const Row(
                                             children: [
-                                              Text(
-                                                'Total Tagihan: ${currency.format(total)}',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15,
-                                                  color: Theme.of(context).colorScheme.primary,
+                                              Icon(Icons.warning_amber_rounded, color: Colors.white),
+                                              SizedBox(width: 10),
+                                              Expanded(
+                                                child: Text(
+                                                  'Wajib melampirkan foto/screenshot bukti transfer sebelum menyelesaikan pesanan!',
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
                                                 ),
                                               ),
-                                              const SizedBox(height: 2),
-                                              const Text(
-                                                'Nominal otomatis terisi di aplikasi pelanggan',
-                                                style: TextStyle(fontSize: 10, color: Colors.black54),
-                                              ),
                                             ],
                                           ),
+                                          backgroundColor: Colors.red.shade700,
+                                          behavior: SnackBarBehavior.floating,
                                         ),
-                                        const SizedBox(height: 8),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            Clipboard.setData(ClipboardData(text: dynamicQris));
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Payload QRIS Dinamis berhasil disalin ke clipboard'),
-                                                duration: Duration(seconds: 2),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(Icons.copy, size: 16),
-                                          label: const Text('Salin String QRIS', style: TextStyle(fontSize: 12)),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                      );
+                                      _selectImageSource();
+                                    } else {
+                                      _finishTransaction(PaymentMethod.transfer);
+                                    }
+                                  },
                                 ),
-                                const SizedBox(height: 12),
-                                const Text(
-                                  'Scan melalui GoPay, OVO, DANA, ShopeePay, BCA, BRI, dll.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 16),
-                                const Text('Screenshot Bukti Bayar Pelanggan', style: TextStyle(fontWeight: FontWeight.bold)),
-                                const SizedBox(height: 8),
-                                InkWell(
-                                  onTap: _pickImage,
-                                  child: Container(
-                                    height: 120,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // 3. QRIS Dinamis Tab
+                        Builder(
+                          builder: (context) {
+                            final settings = context.watch<SettingsProvider>().settings;
+                            final baseStaticQris = settings.qrisString.isNotEmpty
+                                ? settings.qrisString
+                                : QrisHelper.defaultStaticQris;
+                            final dynamicQris = QrisHelper.convertToDynamic(
+                              baseStaticQris,
+                              total,
+                            );
+                            final qrisInfo = QrisHelper.parseQrisInfo(dynamicQris);
+
+                            return SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Card(
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(16),
+                                      side: BorderSide(color: Colors.grey.shade300),
                                     ),
-                                    child: _proofImage != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: kIsWeb 
-                                              ? Image.network(_proofImage!.path, fit: BoxFit.cover)
-                                              : Image.file(File(_proofImage!.path), fit: BoxFit.cover),
-                                          )
-                                        : const Column(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        children: [
+                                          Row(
                                             mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
-                                              Icon(Icons.add_photo_alternate_outlined, size: 40, color: Colors.grey),
-                                              SizedBox(height: 8),
-                                              Text('Upload Bukti Bayar', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                              Icon(Icons.qr_code_scanner_rounded, color: Theme.of(context).colorScheme.primary),
+                                              const SizedBox(width: 8),
+                                              const Text(
+                                                'QRIS DINAMIS',
+                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
+                                              ),
                                             ],
                                           ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${qrisInfo['merchant_name']} • NMID: ${qrisInfo['nmid']}',
+                                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
+                                          ),
+                                          Text(
+                                            '${qrisInfo['city']} (${qrisInfo['postal_code']})',
+                                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                                          ),
+                                          const Divider(height: 20),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(color: Colors.grey.shade200),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.04),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: QrImageView(
+                                              data: dynamicQris,
+                                              version: QrVersions.auto,
+                                              size: 200.0,
+                                              backgroundColor: Colors.white,
+                                              errorCorrectionLevel: QrErrorCorrectLevel.M,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Text(
+                                                  'Total Tagihan: ${currency.format(total)}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: Theme.of(context).colorScheme.primary,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                const Text(
+                                                  'Nominal otomatis terisi di aplikasi pelanggan',
+                                                  style: TextStyle(fontSize: 10, color: Colors.black54),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          TextButton.icon(
+                                            onPressed: () {
+                                              Clipboard.setData(ClipboardData(text: dynamicQris));
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text('Payload QRIS Dinamis berhasil disalin ke clipboard'),
+                                                  duration: Duration(seconds: 2),
+                                                ),
+                                              );
+                                            },
+                                            icon: const Icon(Icons.copy, size: 16),
+                                            label: const Text('Salin String QRIS', style: TextStyle(fontSize: 12)),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 20),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Scan melalui GoPay, OVO, DANA, ShopeePay, BCA, BRI, dll.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // BUKTI TRANSFER QRIS SECTION (WAJIB)
+                                  _buildProofUploadSection(total, currency.format(total)),
+
+                                  const SizedBox(height: 28),
                                   SizedBox(
                                     width: double.infinity,
-                                    height: 50,
+                                    height: 52,
                                     child: FilledButton.icon(
-                                      style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                                      icon: const Icon(Icons.check_circle_outline),
-                                      label: const Text('Konfirmasi QRIS Berhasil & Cetak', style: TextStyle(fontWeight: FontWeight.bold)),
-                                      onPressed: () => _finishTransaction(PaymentMethod.qris),
+                                      style: FilledButton.styleFrom(
+                                        backgroundColor: _proofImage != null ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      ),
+                                      icon: Icon(
+                                        _proofImage != null ? Icons.check_circle_rounded : Icons.add_photo_alternate_rounded,
+                                        size: 20,
+                                      ),
+                                      label: Text(
+                                        _proofImage != null ? 'Konfirmasi QRIS Berhasil & Cetak' : 'Lampirkan Bukti QRIS Dahulu',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                      onPressed: () {
+                                        if (_proofImage == null) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: const Row(
+                                                children: [
+                                                  Icon(Icons.warning_amber_rounded, color: Colors.white),
+                                                  SizedBox(width: 10),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Wajib melampirkan foto/screenshot bukti pembayaran QRIS sebelum menyelesaikan pesanan!',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              backgroundColor: Colors.red.shade700,
+                                              behavior: SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                          _selectImageSource();
+                                        } else {
+                                          _finishTransaction(PaymentMethod.qris);
+                                        }
+                                      },
                                     ),
-                                  )
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
     );
   }
 }

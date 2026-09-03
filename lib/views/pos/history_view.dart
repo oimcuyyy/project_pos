@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -143,7 +144,23 @@ class _HistoryViewState extends State<HistoryView> {
                           alignment: Alignment.center,
                           children: [
                             InteractiveViewer(
-                              child: Image.network(tx.paymentProofUrl!, fit: BoxFit.contain),
+                              minScale: 0.5,
+                              maxScale: 4.0,
+                              child: tx.paymentProofUrl!.startsWith('data:image')
+                                  ? Image.memory(
+                                      base64Decode(tx.paymentProofUrl!.split(',').last),
+                                      fit: BoxFit.contain,
+                                    )
+                                  : Image.network(
+                                      tx.paymentProofUrl!,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, _, _) => const Center(
+                                        child: Text(
+                                          'Gagal memuat gambar bukti transfer',
+                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
                             ),
                             Positioned(
                               top: 8,
@@ -362,7 +379,29 @@ class _HistoryViewState extends State<HistoryView> {
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                        )
+                                        ),
+                                        if (tx.paymentProofUrl != null && tx.paymentProofUrl!.isNotEmpty) ...[
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.green.shade50,
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(color: Colors.green.shade200),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.image_rounded, size: 10, color: Colors.green.shade700),
+                                                const SizedBox(width: 3),
+                                                Text(
+                                                  'Bukti Ada',
+                                                  style: TextStyle(color: Colors.green.shade700, fontSize: 9, fontWeight: FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                     const SizedBox(height: 4),
