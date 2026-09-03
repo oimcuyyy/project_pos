@@ -532,6 +532,67 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
     );
   }
 
+  void _confirmCashPayment(double total, NumberFormat currency) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.payments_rounded, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Konfirmasi Bayar Tunai', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Pastikan uang tunai fisik sebesar ${currency.format(_cashReceived)} sudah diterima langsung di laci kasir.',
+              style: const TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade300),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 18, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Jika pelanggan membayar via Transfer / QRIS, gunakan tab Transfer / QRIS dan wajib lampirkan bukti screenshot!',
+                      style: TextStyle(fontSize: 11, color: Colors.brown, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _finishTransaction(PaymentMethod.cash);
+            },
+            child: const Text('Ya, Uang Fisik Diterima'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _finishTransaction(PaymentMethod method) async {
     if (_isProcessing) return;
 
@@ -807,7 +868,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
-                                  onPressed: _cashReceived >= total ? () => _finishTransaction(PaymentMethod.cash) : null,
+                                  onPressed: _cashReceived >= total ? () => _confirmCashPayment(total, currency) : null,
                                   child: const Text('Bayar Tunai & Cetak Struk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                                 ),
                               ),
