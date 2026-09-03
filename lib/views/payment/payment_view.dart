@@ -31,6 +31,8 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
   double _cashReceived = 0;
   bool _isProcessing = false;
   XFile? _proofImage;
+  bool _isTransferVerified = false;
+  bool _isQrisVerified = false;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -207,7 +209,13 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           visualDensity: VisualDensity.compact,
                         ),
-                        onPressed: () => Navigator.pop(dCtx),
+                        onPressed: () {
+                          setState(() {
+                            _isTransferVerified = true;
+                            _isQrisVerified = true;
+                          });
+                          Navigator.pop(dCtx);
+                        },
                         child: const Text('Sudah Sesuai', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       ),
                     ],
@@ -221,7 +229,9 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildProofUploadSection(double total, String formattedTotal) {
+  Widget _buildProofUploadSection(double total, String formattedTotal, {required bool isTransfer}) {
+    final isVerified = isTransfer ? _isTransferVerified : _isQrisVerified;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -269,7 +279,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
+                color: const Color(0xFFFFFBEB), // Amber-50
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.amber.shade400, width: 1.5),
               ),
@@ -305,6 +315,27 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_rounded, size: 16, color: Colors.red.shade700),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tombol konfirmasi transaksi terkunci sampai bukti transfer dilampirkan.',
+                    style: TextStyle(fontSize: 11, color: Colors.red.shade800, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
             ),
           ),
         ] else ...[
@@ -408,7 +439,14 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                               IconButton(
                                 icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
                                 tooltip: 'Hapus bukti',
-                                onPressed: () => setState(() => _proofImage = null),
+                                onPressed: () => setState(() {
+                                  _proofImage = null;
+                                  if (isTransfer) {
+                                    _isTransferVerified = false;
+                                  } else {
+                                    _isQrisVerified = false;
+                                  }
+                                }),
                               ),
                             ],
                           ),
@@ -417,25 +455,54 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF16A34A)),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Klik "Periksa Bukti" untuk melihat gambar penuh dan mencocokkan nominal.',
-                          style: TextStyle(fontSize: 11, color: Colors.green.shade800),
+                const SizedBox(height: 12),
+
+                // CHECKBOX KONFIRMASI KASIR
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    setState(() {
+                      if (isTransfer) {
+                        _isTransferVerified = !_isTransferVerified;
+                      } else {
+                        _isQrisVerified = !_isQrisVerified;
+                      }
+                    });
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isVerified ? Colors.green.shade50 : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isVerified ? Colors.green.shade400 : const Color(0xFFCBD5E1)),
+                    ),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: isVerified,
+                          activeColor: const Color(0xFF10B981),
+                          onChanged: (val) {
+                            setState(() {
+                              if (isTransfer) {
+                                _isTransferVerified = val ?? false;
+                              } else {
+                                _isQrisVerified = val ?? false;
+                              }
+                            });
+                          },
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: Text(
+                            'Saya (Kasir) telah memeriksa bukti dan memastikan transfer $formattedTotal sudah masuk ke rekening toko.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isVerified ? FontWeight.bold : FontWeight.w500,
+                              color: isVerified ? Colors.green.shade900 : const Color(0xFF334155),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -468,7 +535,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
   Future<void> _finishTransaction(PaymentMethod method) async {
     if (_isProcessing) return;
 
-    // VALIDASI WAJIB BUKTI TRANSFER UNTUK METODE NON-TUNAI
+    // VALIDASI KETAT WAJIB BUKTI TRANSFER & KONFIRMASI KASIR
     if (method == PaymentMethod.transfer || method == PaymentMethod.qris) {
       if (_proofImage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -490,6 +557,29 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
           ),
         );
         _selectImageSource();
+        return;
+      }
+
+      final isVerified = method == PaymentMethod.transfer ? _isTransferVerified : _isQrisVerified;
+      if (!isVerified) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_box_outline_blank_rounded, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Harap centang konfirmasi verifikasi bukti transfer terlebih dahulu!',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         return;
       }
     }
@@ -522,7 +612,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
               .getPublicUrl(fileName);
         } catch (uploadErr) {
           debugPrint('Upload to Supabase storage error: $uploadErr');
-          // Fallback: simpan sebagai data URI Base64 agar bukti TIDAK PERNAH HILANG meski Supabase offline
+          // Fallback: simpan sebagai data URI Base64 agar bukti TIDAK PERNAH HILANG
           final base64String = base64Encode(bytes);
           proofUrl = 'data:image/$ext;base64,$base64String';
         }
@@ -741,7 +831,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                               const SizedBox(height: 20),
 
                               // BUKTI TRANSFER SECTION (WAJIB)
-                              _buildProofUploadSection(total, currency.format(total)),
+                              _buildProofUploadSection(total, currency.format(total), isTransfer: true),
 
                               const SizedBox(height: 28),
                               SizedBox(
@@ -749,42 +839,28 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                                 height: 52,
                                 child: FilledButton.icon(
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: _proofImage != null ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                    backgroundColor: (_proofImage != null && _isTransferVerified)
+                                        ? const Color(0xFF10B981)
+                                        : Colors.grey.shade400,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                   icon: Icon(
-                                    _proofImage != null ? Icons.check_circle_rounded : Icons.add_photo_alternate_rounded,
+                                    (_proofImage != null && _isTransferVerified)
+                                        ? Icons.check_circle_rounded
+                                        : Icons.lock_outline_rounded,
                                     size: 20,
                                   ),
                                   label: Text(
-                                    _proofImage != null ? 'Konfirmasi Transfer Lunas & Cetak' : 'Lampirkan Bukti Transfer Dahulu',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    _proofImage == null
+                                        ? 'Terkunci (Wajib Upload Bukti Transfer)'
+                                        : (!_isTransferVerified
+                                            ? 'Centang Verifikasi Bukti Terlebih Dahulu'
+                                            : 'Konfirmasi Transfer Lunas & Cetak'),
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                   ),
-                                  onPressed: () {
-                                    if (_proofImage == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: const Row(
-                                            children: [
-                                              Icon(Icons.warning_amber_rounded, color: Colors.white),
-                                              SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  'Wajib melampirkan foto/screenshot bukti transfer sebelum menyelesaikan pesanan!',
-                                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          backgroundColor: Colors.red.shade700,
-                                          behavior: SnackBarBehavior.floating,
-                                        ),
-                                      );
-                                      _selectImageSource();
-                                    } else {
-                                      _finishTransaction(PaymentMethod.transfer);
-                                    }
-                                  },
+                                  onPressed: (_proofImage != null && _isTransferVerified)
+                                      ? () => _finishTransaction(PaymentMethod.transfer)
+                                      : null, // BENAR-BENAR TERKUNCI & TIDAK BISA DIKLIK!
                                 ),
                               ),
                             ],
@@ -914,7 +990,7 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                                   const SizedBox(height: 20),
 
                                   // BUKTI TRANSFER QRIS SECTION (WAJIB)
-                                  _buildProofUploadSection(total, currency.format(total)),
+                                  _buildProofUploadSection(total, currency.format(total), isTransfer: false),
 
                                   const SizedBox(height: 28),
                                   SizedBox(
@@ -922,42 +998,28 @@ class _PaymentViewState extends State<PaymentView> with SingleTickerProviderStat
                                     height: 52,
                                     child: FilledButton.icon(
                                       style: FilledButton.styleFrom(
-                                        backgroundColor: _proofImage != null ? const Color(0xFF10B981) : Colors.amber.shade700,
+                                        backgroundColor: (_proofImage != null && _isQrisVerified)
+                                            ? const Color(0xFF10B981)
+                                            : Colors.grey.shade400,
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       ),
                                       icon: Icon(
-                                        _proofImage != null ? Icons.check_circle_rounded : Icons.add_photo_alternate_rounded,
+                                        (_proofImage != null && _isQrisVerified)
+                                            ? Icons.check_circle_rounded
+                                            : Icons.lock_outline_rounded,
                                         size: 20,
                                       ),
                                       label: Text(
-                                        _proofImage != null ? 'Konfirmasi QRIS Berhasil & Cetak' : 'Lampirkan Bukti QRIS Dahulu',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        _proofImage == null
+                                            ? 'Terkunci (Wajib Upload Bukti QRIS)'
+                                            : (!_isQrisVerified
+                                                ? 'Centang Verifikasi Bukti Terlebih Dahulu'
+                                                : 'Konfirmasi QRIS Berhasil & Cetak'),
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
-                                      onPressed: () {
-                                        if (_proofImage == null) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: const Row(
-                                                children: [
-                                                  Icon(Icons.warning_amber_rounded, color: Colors.white),
-                                                  SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Text(
-                                                      'Wajib melampirkan foto/screenshot bukti pembayaran QRIS sebelum menyelesaikan pesanan!',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              backgroundColor: Colors.red.shade700,
-                                              behavior: SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                          _selectImageSource();
-                                        } else {
-                                          _finishTransaction(PaymentMethod.qris);
-                                        }
-                                      },
+                                      onPressed: (_proofImage != null && _isQrisVerified)
+                                          ? () => _finishTransaction(PaymentMethod.qris)
+                                          : null, // BENAR-BENAR TERKUNCI & TIDAK BISA DIKLIK!
                                     ),
                                   ),
                                 ],
