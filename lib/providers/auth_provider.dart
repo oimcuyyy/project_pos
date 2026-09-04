@@ -113,7 +113,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     _currentUser = null;
-    await SecureStorageService.clearAll();
+    await SecureStorageService.clearUserSession();
     notifyListeners();
   }
 }

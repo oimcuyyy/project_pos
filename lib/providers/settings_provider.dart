@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../config/supabase_config.dart';
 import '../core/security/secure_storage_service.dart';
@@ -6,6 +7,7 @@ import '../models/store_settings_model.dart';
 class SettingsProvider with ChangeNotifier {
   StoreSettingsModel _settings = StoreSettingsModel();
   bool _isLoading = false;
+  Timer? _pollingTimer;
 
   StoreSettingsModel get settings => _settings;
   bool get isLoading => _isLoading;
@@ -13,6 +15,13 @@ class SettingsProvider with ChangeNotifier {
   SettingsProvider() {
     _initSettings();
   }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
 
   Future<void> _initSettings() async {
     // 1. Muat status maintenance dari SecureStorage terlebih dahulu agar tidak reset saat app dibuka/rebuild
@@ -31,11 +40,18 @@ class SettingsProvider with ChangeNotifier {
 
     // 2. Fetch remote settings dari Supabase
     await fetchSettings();
+
+    // 3. Polling tiap 10 detik agar kasir yang sudah login langsung terkunci jika admin menyalakan maintenance
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      fetchSettings(silent: true);
+    });
   }
 
-  Future<void> fetchSettings() async {
-    _isLoading = true;
-    notifyListeners();
+  Future<void> fetchSettings({bool silent = false}) async {
+    if (!silent) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
       final supabase = SupabaseConfig.client;
@@ -71,7 +87,9 @@ class SettingsProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Fetch store settings error: $e');
     } finally {
-      _isLoading = false;
+      if (!silent) {
+        _isLoading = false;
+      }
       notifyListeners();
     }
   }

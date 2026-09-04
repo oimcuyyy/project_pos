@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../admin/admin_dashboard_view.dart';
+import '../auth/login_view.dart';
 
 class MaintenanceLockView extends StatelessWidget {
   const MaintenanceLockView({super.key});
@@ -261,6 +262,28 @@ class MaintenanceLockView extends StatelessWidget {
                             onPressed: () => Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(builder: (_) => const AdminDashboardView()),
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: const BorderSide(color: Color(0xFF334155)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.login_rounded, size: 18),
+                            label: const Text(
+                              'Kembali ke Halaman Login',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                            onPressed: () => Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginView()),
                             ),
                           ),
                         ),

@@ -480,17 +480,30 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Breadcrumb
-                            Row(
-                              children: [
-                                const Text('Admin Back-Office', style: TextStyle(color: Color(0xFF64748B), fontSize: 14)),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  currentTitle,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
-                                ),
-                              ],
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Flexible(
+                                    child: Text(
+                                      'Admin Back-Office',
+                                      style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF94A3B8)),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      currentTitle,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A)),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
 
                             // Header Actions
@@ -1413,21 +1426,33 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                       ),
                     ),
                     OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
                       icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
                       label: const Text('Tambah Menu Baru'),
                       onPressed: () => _showProductFormDialog(context),
                     ),
                     OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
                       icon: const Icon(Icons.category_outlined, size: 18),
                       label: const Text('Tambah Kategori'),
                       onPressed: () => _showAddCategoryDialog(context),
                     ),
                     OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
                       icon: const Icon(Icons.analytics_outlined, size: 18),
                       label: const Text('Lihat Laporan Penjualan'),
                       onPressed: () => setState(() => _selectedNavIndex = 2),
                     ),
                     OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
                       icon: const Icon(Icons.history_toggle_off_rounded, size: 18),
                       label: const Text('Rekap Shift Kasir'),
                       onPressed: () => setState(() => _selectedNavIndex = 3),
@@ -1492,6 +1517,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                           style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                         ),
                         trailing: Column(
+                          mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -1556,7 +1582,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     required Color accentColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -1569,7 +1595,15 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+              Expanded(
+                child: Text(
+                  title, 
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -1586,9 +1620,16 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
               Text(
                 value,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), letterSpacing: -0.3),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              Text(
+                subtitle, 
+                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           )
         ],

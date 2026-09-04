@@ -15,6 +15,7 @@ import 'providers/transaction_provider.dart';
 import 'providers/customer_provider.dart';
 import 'providers/employee_provider.dart';
 import 'views/auth/login_view.dart';
+import 'views/maintenance/maintenance_lock_view.dart';
 
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -88,6 +89,19 @@ class PosApp extends StatelessWidget {
         title: 'POS Kasir Pintar',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        builder: (context, child) {
+          final settings = context.watch<SettingsProvider>().settings;
+          final auth = context.watch<AuthProvider>();
+          final currentUser = auth.currentUser;
+          
+          // Cegah akses global ke aplikasi jika maintenance aktif dan user yang login BUKAN admin.
+          // Jika belum login (currentUser == null), biarkan akses ke halaman login agar Admin tetap bisa login.
+          if (settings.isMaintenance && currentUser != null && !currentUser.isAdmin) {
+            return const MaintenanceLockView();
+          }
+          
+          return child!;
+        },
         home: const LoginView(),
       ),
     );

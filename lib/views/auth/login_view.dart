@@ -38,8 +38,12 @@ class _LoginViewState extends State<LoginView> {
           MaterialPageRoute(builder: (_) => const AdminDashboardView()),
         );
       } else {
-        final settings = context.read<SettingsProvider>().settings;
-        if (settings.isMaintenance) {
+        final settingsProv = context.read<SettingsProvider>();
+        // Pastikan fetch setting terbaru untuk memastikan status maintenance akurat
+        await settingsProv.fetchSettings();
+        if (!mounted) return;
+
+        if (settingsProv.settings.isMaintenance) {
           auth.logout();
           Navigator.pushReplacement(
             context,

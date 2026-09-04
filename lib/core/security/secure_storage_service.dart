@@ -16,8 +16,8 @@ class SecureStorageService {
     return await _storage.read(key: 'user_id');
   }
 
-  static Future<void> clearAll() async {
-    await _storage.deleteAll();
+  static Future<void> clearUserSession() async {
+    await _storage.delete(key: 'user_id');
   }
 
   static Future<void> saveMaintenanceMode({
