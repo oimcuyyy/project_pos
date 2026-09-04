@@ -16,6 +16,15 @@ class HistoryView extends StatefulWidget {
 class _HistoryViewState extends State<HistoryView> {
   String _searchQuery = '';
 
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionProvider>().fetchTransactions();
+    });
+  }
+
   Color _getMethodColor(PaymentMethod method) {
     switch (method) {
       case PaymentMethod.cash:
@@ -307,22 +316,33 @@ class _HistoryViewState extends State<HistoryView> {
 
         // List Riwayat Transaksi
         Expanded(
-          child: filtered.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          child: RefreshIndicator(
+            onRefresh: () => context.read<TransactionProvider>().fetchTransactions(),
+            child: filtered.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     children: [
-                      Icon(Icons.history_toggle_off_rounded, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 12),
-                      Text(
-                        _searchQuery.isEmpty ? 'Belum ada transaksi' : 'Transaksi tidak ditemukan',
-                        style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.history_toggle_off_rounded, size: 64, color: Colors.grey.shade400),
+                              const SizedBox(height: 12),
+                              Text(
+                                _searchQuery.isEmpty ? 'Belum ada transaksi' : 'Transaksi tidak ditemukan',
+                                style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  )
+                : ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: filtered.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
@@ -442,6 +462,7 @@ class _HistoryViewState extends State<HistoryView> {
                     );
                   },
                 ),
+          ),
         ),
       ],
     );

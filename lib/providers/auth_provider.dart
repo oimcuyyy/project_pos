@@ -111,6 +111,43 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
+  Future<bool> registerCustomer(String name, String username, String password) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final supabase = SupabaseConfig.client;
+
+      // Cek apakah username sudah dipakai
+      final existing = await supabase.from('users').select('id').eq('username', username).maybeSingle();
+      if (existing != null) {
+        _errorMessage = "Username '$username' sudah terdaftar!";
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Buat akun baru dengan role 'user'
+      await supabase.from('users').insert({
+        'name': name,
+        'username': username,
+        'password': password, // Ideally hashed in production
+        'role': 'user',
+      });
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('Register error: $e');
+      _errorMessage = "Gagal mendaftar. Pastikan koneksi internet stabil.";
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     _currentUser = null;
     await SecureStorageService.clearUserSession();

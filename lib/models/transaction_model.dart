@@ -62,9 +62,9 @@ class TransactionModel {
       'cashier_name': cashierName,
       'order_type': orderType,
       'table_number': tableNumber,
-      'customer_name': customerName,
+      // Trik untuk menyimpan payment_proof_url tanpa perlu mengubah skema database Supabase
+      'customer_name': paymentProofUrl != null ? '${customerName ?? "Pelanggan"}||$paymentProofUrl' : customerName,
       'customer_phone': customerPhone,
-      'payment_proof_url': paymentProofUrl,
     };
   }
 
@@ -72,6 +72,9 @@ class TransactionModel {
     PaymentMethod method = PaymentMethod.cash;
     if (map['payment_method'] == 'qris') method = PaymentMethod.qris;
     if (map['payment_method'] == 'transfer') method = PaymentMethod.transfer;
+
+    final rawCustomerName = map['customer_name']?.toString();
+    final hasProof = rawCustomerName != null && rawCustomerName.contains('||');
 
     return TransactionModel(
       id: map['id']?.toString() ?? '',
@@ -88,9 +91,9 @@ class TransactionModel {
       cashierName: map['cashier_name']?.toString() ?? 'Kasir',
       orderType: map['order_type']?.toString() ?? 'Dine In',
       tableNumber: map['table_number']?.toString(),
-      customerName: map['customer_name']?.toString(),
+      customerName: hasProof ? rawCustomerName.split('||').first : rawCustomerName,
       customerPhone: map['customer_phone']?.toString(),
-      paymentProofUrl: map['payment_proof_url']?.toString(),
+      paymentProofUrl: hasProof ? rawCustomerName.split('||').last : null,
     );
   }
 }

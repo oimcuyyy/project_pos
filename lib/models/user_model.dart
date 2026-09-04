@@ -1,4 +1,4 @@
-enum UserRole { admin, cashier }
+enum UserRole { admin, cashier, user }
 
 class UserModel {
   final String id;
@@ -14,6 +14,7 @@ class UserModel {
   });
 
   bool get isAdmin => role == UserRole.admin;
+  bool get isUser => role == UserRole.user;
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
@@ -22,7 +23,9 @@ class UserModel {
       username: map['username']?.toString() ?? '',
       role: (map['role']?.toString().toLowerCase() == 'admin')
           ? UserRole.admin
-          : UserRole.cashier,
+          : (map['role']?.toString().toLowerCase() == 'user')
+              ? UserRole.user
+              : UserRole.cashier,
     );
   }
 
@@ -31,7 +34,7 @@ class UserModel {
       'id': id,
       'name': name,
       'username': username,
-      'role': role == UserRole.admin ? 'admin' : 'cashier',
+      'role': role.name,
     };
   }
 }

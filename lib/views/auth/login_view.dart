@@ -6,6 +6,8 @@ import '../../providers/settings_provider.dart';
 import '../admin/admin_dashboard_view.dart';
 import '../maintenance/maintenance_lock_view.dart';
 import '../pos/pos_home_view.dart';
+import '../user/user_home_view.dart';
+import 'register_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -52,10 +54,17 @@ class _LoginViewState extends State<LoginView> {
           return;
         }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const PosHomeView()),
-        );
+        if (auth.currentUser!.isUser) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const UserHomeView()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const PosHomeView()),
+          );
+        }
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -128,7 +137,7 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                                 const SizedBox(height: 24),
                                 const Text(
-                                  'POS KASIR & ADMIN',
+                                  'SMART POS & SELF-SERVICE',
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w900,
@@ -138,7 +147,7 @@ class _LoginViewState extends State<LoginView> {
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
-                                  'Sistem kasir cerdas terintegrasi dengan back-office manajemen toko & laporan finansial realtime.',
+                                  'Sistem kasir terintegrasi untuk manajemen toko sekaligus portal pemesanan mandiri (Self-Service) bagi pelanggan.',
                                   style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.5),
                                 ),
                                 const SizedBox(height: 28),
@@ -146,7 +155,7 @@ class _LoginViewState extends State<LoginView> {
                                 const SizedBox(height: 12),
                                 _buildFeatureItem(Icons.qr_code_2_rounded, 'QRIS Dinamis & Cetak Struk Bluetooth'),
                                 const SizedBox(height: 12),
-                                _buildFeatureItem(Icons.analytics_rounded, 'Laporan Omzet, Laba HPP & Shift Kasir'),
+                                _buildFeatureItem(Icons.touch_app_rounded, 'Layar Pemesanan Mandiri (Kiosk) Pelanggan'),
                                 const SizedBox(height: 28),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -195,13 +204,13 @@ class _LoginViewState extends State<LoginView> {
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            'POS KASIR PINTAR',
+                            'SMART POS & KIOSK',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: Color(0xFF0F172A)),
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Masuk untuk memulai shift atau mengelola toko',
+                            'Masuk untuk mengelola toko atau memesan makanan',
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                           ),
@@ -246,12 +255,12 @@ class _LoginViewState extends State<LoginView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const Text(
-          'Login Masuk',
+          'Selamat Datang',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
         ),
         const SizedBox(height: 4),
         const Text(
-          'Masukkan kredensial akun Anda di bawah ini',
+          'Silakan masuk sebagai Admin, Kasir, atau Pelanggan',
           style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
         ),
         const SizedBox(height: 20),
@@ -260,7 +269,7 @@ class _LoginViewState extends State<LoginView> {
           controller: _userController,
           decoration: const InputDecoration(
             labelText: 'Username',
-            hintText: 'admin / kasir',
+            hintText: 'admin / kasir / user',
             prefixIcon: Icon(Icons.person_outline_rounded),
           ),
         ),
@@ -303,6 +312,22 @@ class _LoginViewState extends State<LoginView> {
                     Icon(Icons.arrow_forward_rounded, size: 18),
                   ],
                 ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Belum punya akun? ', style: TextStyle(color: Color(0xFF64748B))),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RegisterView()),
+                );
+              },
+              child: const Text('Daftar Pelanggan', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+            ),
+          ],
         ),
       ],
     );

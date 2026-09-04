@@ -63,7 +63,8 @@ class EmployeeProvider with ChangeNotifier {
       
       final idx = _employees.indexWhere((e) => e.id == id);
       if (idx != -1) {
-        _employees[idx] = UserModel(id: id, name: name, username: username, role: role == 'admin' ? UserRole.admin : UserRole.cashier);
+        final parsedRole = role == 'admin' ? UserRole.admin : (role == 'user' ? UserRole.user : UserRole.cashier);
+        _employees[idx] = UserModel(id: id, name: name, username: username, role: parsedRole);
         notifyListeners();
       }
       return true;
