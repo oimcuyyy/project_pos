@@ -7,6 +7,7 @@ import '../../providers/cart_provider.dart';
 import '../auth/login_view.dart';
 import '../pos/widgets/magic_design_spells.dart';
 import 'user_payment_view.dart' as user_payment_view;
+import '../../models/product_model.dart';
 
 class UserHomeView extends StatefulWidget {
   const UserHomeView({super.key});
@@ -59,6 +60,145 @@ class _UserHomeViewState extends State<UserHomeView> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showOptionsDialog(BuildContext context, ProductModel product, CartProvider cartProv) {
+    Map<String, dynamic> selectedOptionsMap = {};
+
+    for (var optionGroup in product.options) {
+      if (optionGroup is Map && optionGroup.containsKey('name') && optionGroup.containsKey('choices')) {
+        final choices = optionGroup['choices'] as List;
+        if (choices.isNotEmpty) {
+          selectedOptionsMap[optionGroup['name']] = choices[0];
+        }
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setStateSB) {
+            double currentPrice = product.price;
+            selectedOptionsMap.forEach((key, choice) {
+              if (choice is Map && choice.containsKey('price')) {
+                currentPrice += (choice['price'] as num).toDouble();
+              }
+            });
+
+            return AlertDialog(
+              title: Text('Pilih Varian: ${product.name}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              content: SizedBox(
+                width: 300,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: product.options.map((optionGroup) {
+                      if (optionGroup is! Map || !optionGroup.containsKey('name') || !optionGroup.containsKey('choices')) {
+                        return const SizedBox.shrink();
+                      }
+                      
+                      final groupName = optionGroup['name'];
+                      final choices = optionGroup['choices'] as List;
+                      
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 12),
+                          Text(groupName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+                          const SizedBox(height: 4),
+                          Builder(builder: (context) {
+                            final currentSelected = selectedOptionsMap[groupName];
+                            return Column(
+                              children: choices.map((choice) {
+                                if (choice is! Map) return const SizedBox.shrink();
+                                
+                                final choiceName = choice['name'] ?? '';
+                                final choicePrice = (choice['price'] as num?)?.toDouble() ?? 0.0;
+                                
+                                return RadioListTile<String>(
+                                  title: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(choiceName, style: const TextStyle(fontSize: 14)),
+                                      if (choicePrice > 0)
+                                        Text('+${_currency.format(choicePrice)}', style: const TextStyle(fontSize: 12, color: Colors.green)),
+                                    ],
+                                  ),
+                                  value: choiceName,
+                                  // ignore: deprecated_member_use
+                                  groupValue: currentSelected is Map ? currentSelected['name'] as String? : null,
+                                  // ignore: deprecated_member_use
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      final matched = choices.firstWhere((c) => c is Map && c['name'] == val, orElse: () => null);
+                                      if (matched != null) {
+                                        setStateSB(() {
+                                          selectedOptionsMap[groupName] = matched;
+                                        });
+                                      }
+                                    }
+                                  },
+                                  contentPadding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                );
+                              }).toList(),
+                            );
+                          }),
+                          const Divider(),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Batal'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    List<Map<String, dynamic>> finalOptions = [];
+                    selectedOptionsMap.forEach((group, choice) {
+                      finalOptions.add({
+                        'group': group,
+                        'name': choice['name'],
+                        'price': choice['price'] ?? 0.0,
+                      });
+                    });
+                    
+                    cartProv.addItem(product, options: finalOptions);
+                    Navigator.pop(ctx);
+                    
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.white),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text('${product.name} ditambahkan!')),
+                            ],
+                          ),
+                          backgroundColor: Colors.green.shade700,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Tambah - ${_currency.format(currentPrice)}'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -116,24 +256,29 @@ class _UserHomeViewState extends State<UserHomeView> {
                         title: product.name,
                         price: _currency.format(product.price),
                         imageUrl: product.imageUrl,
+                        hasOptions: product.options.isNotEmpty,
                         onTap: () {
-                          cartProv.addItem(product);
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  const Icon(Icons.check_circle, color: Colors.white),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: Text('${product.name} ditambahkan!')),
-                                ],
+                          if (product.options.isNotEmpty) {
+                            _showOptionsDialog(context, product, cartProv);
+                          } else {
+                            cartProv.addItem(product);
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Colors.white),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: Text('${product.name} ditambahkan!')),
+                                  ],
+                                ),
+                                backgroundColor: Colors.green.shade700,
+                                duration: const Duration(milliseconds: 1500),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              backgroundColor: Colors.green.shade700,
-                              duration: const Duration(milliseconds: 1500),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          );
+                            );
+                          }
                         },
                       );
                     },

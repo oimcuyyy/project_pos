@@ -9,6 +9,7 @@ class MagicProductCard extends StatefulWidget {
   final String price;
   final String? imageUrl;
   final VoidCallback onTap;
+  final bool hasOptions;
 
   const MagicProductCard({
     super.key,
@@ -16,6 +17,7 @@ class MagicProductCard extends StatefulWidget {
     required this.price,
     required this.onTap,
     this.imageUrl,
+    this.hasOptions = false,
   });
 
   @override
@@ -185,6 +187,35 @@ class _MagicProductCardState extends State<MagicProductCard>
                             ],
                             stops: const [0.0, 0.4],
                           ),
+                        ),
+                      ),
+                    ),
+                  // Badge Varian
+                  if (widget.hasOptions)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.orange.shade300),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.tune_rounded, size: 12, color: Colors.orange.shade800),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Varian',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange.shade800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

@@ -11,7 +11,9 @@ import '../../providers/settings_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../utils/qris_helper.dart';
+import '../../models/user_model.dart';
 import '../auth/login_view.dart';
+import '../user/user_home_view.dart';
 import '../pos/pos_home_view.dart';
 import '../pos/history_view.dart';
 import 'customer_tab.dart';
@@ -423,7 +425,9 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       'Shift Kasir',
       'Semua Transaksi',
       'Data Pelanggan',
-      'Kelola Pegawai',
+      'Kelola Admin',
+      'Kelola Kasir',
+      'Kelola User',
       'Pengaturan Toko',
       'Mode Maintenance',
     ];
@@ -442,6 +446,14 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   onPressed: () => Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const PosHomeView()),
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.phone_android_rounded, size: 18),
+                  label: const Text('Mode User'),
+                  onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UserHomeView()),
                   ),
                 ),
                 IconButton(
@@ -536,7 +548,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                     ),
                                     icon: const Icon(Icons.warning_amber_rounded, size: 18, color: Colors.white),
                                     label: const Text('MAINTENANCE ON', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.white)),
-                                    onPressed: () => setState(() => _selectedNavIndex = 8),
+                                    onPressed: () => setState(() => _selectedNavIndex = 10),
                                   ),
                                 ],
                                 const SizedBox(width: 10),
@@ -551,6 +563,20 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                                   onPressed: () => Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(builder: (_) => const PosHomeView()),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                FilledButton.icon(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: const Color(0xFF10B981),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
+                                  icon: const Icon(Icons.phone_android_rounded, size: 18),
+                                  label: const Text('Buka User', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                  onPressed: () => Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const UserHomeView()),
                                   ),
                                 ),
                               ],
@@ -626,7 +652,9 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       {'title': 'Shift Kasir', 'icon': Icons.history_toggle_off_rounded},
       {'title': 'Semua Transaksi', 'icon': Icons.receipt_long_rounded},
       {'title': 'Data Pelanggan', 'icon': Icons.people_alt_rounded},
-      {'title': 'Kelola Pegawai', 'icon': Icons.badge_rounded},
+      {'title': 'Kelola Admin', 'icon': Icons.admin_panel_settings_rounded},
+      {'title': 'Kelola Kasir', 'icon': Icons.point_of_sale_rounded},
+      {'title': 'Kelola User', 'icon': Icons.person_rounded},
       {'title': 'Pengaturan Toko', 'icon': Icons.tune_rounded},
       {'title': 'Mode Maintenance', 'icon': Icons.shield_rounded},
     ];
@@ -692,7 +720,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   final isSelected = _selectedNavIndex == i;
                   final item = navItems[i];
                   final isCatalog = i == 1;
-                  final isMaintenanceNav = i == 8;
+                  final isMaintenanceNav = i == 10;
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -871,10 +899,14 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       case 5:
         return const CustomerTab();
       case 6:
-        return const EmployeeTab();
+        return const EmployeeTab(roleFilter: UserRole.admin);
       case 7:
-        return _StoreSettingsTab(settings: settingsProv.settings, onSave: (updated) => settingsProv.updateSettings(updated));
+        return const EmployeeTab(roleFilter: UserRole.cashier);
       case 8:
+        return const EmployeeTab(roleFilter: UserRole.user);
+      case 9:
+        return _StoreSettingsTab(settings: settingsProv.settings, onSave: (updated) => settingsProv.updateSettings(updated));
+      case 10:
         return _buildMaintenanceTab(context, auth, settingsProv);
       default:
         return _buildOverviewTab(context, auth, productProv, shiftProv, trxProv, currency);
@@ -1423,6 +1455,18 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                       onPressed: () => Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (_) => const PosHomeView()),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                      icon: const Icon(Icons.phone_android_rounded, size: 18),
+                      label: const Text('Buka Layar User'),
+                      onPressed: () => Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserHomeView()),
                       ),
                     ),
                     OutlinedButton.icon(

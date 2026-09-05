@@ -9,18 +9,51 @@ class RegisterView extends StatefulWidget {
   State<RegisterView> createState() => _RegisterViewState();
 }
 
-class _RegisterViewState extends State<RegisterView> {
+class _RegisterViewState extends State<RegisterView> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   bool _obscurePassword = true;
+  late final AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _animController.forward();
+  }
 
   @override
   void dispose() {
+    _animController.dispose();
     _nameController.dispose();
     _userController.dispose();
     _passController.dispose();
     super.dispose();
+  }
+
+  Widget _buildAnimatedItem(Widget child, int index) {
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        final start = (index * 0.1).clamp(0.0, 1.0);
+        final end = (start + 0.4).clamp(0.0, 1.0);
+        final progress = ((_animController.value - start) / (end - start)).clamp(0.0, 1.0);
+        final val = Curves.easeOutCubic.transform(progress);
+        
+        return Transform.translate(
+          offset: Offset(0, 20 * (1 - val)),
+          child: Opacity(
+            opacity: val,
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
   }
 
   void _handleRegister() async {
@@ -80,37 +113,26 @@ class _RegisterViewState extends State<RegisterView> {
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440), // Ukuran form compact
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeOutCubic,
-              builder: (context, val, child) => Transform.translate(
-                offset: Offset(0, 20 * (1 - val)),
-                child: Opacity(
-                  opacity: val.clamp(0.0, 1.0),
-                  child: child,
-                ),
+            child: Card(
+              elevation: 4,
+              shadowColor: Colors.black.withValues(alpha: 0.08),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
-              child: Card(
-                elevation: 4,
-                shadowColor: Colors.black.withValues(alpha: 0.08),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: const BorderSide(color: Color(0xFFE2E8F0)),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Padding(
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
                   padding: const EdgeInsets.all(32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (isWide)
-                        Align(
+                        _buildAnimatedItem(Align(
                           alignment: Alignment.topLeft,
                           child: BackButton(onPressed: () => Navigator.pop(context)),
-                        ),
-                      Center(
+                        ), 0),
+                      _buildAnimatedItem(Center(
                         child: Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -119,42 +141,42 @@ class _RegisterViewState extends State<RegisterView> {
                           ),
                           child: const Icon(Icons.person_add_rounded, size: 36, color: Colors.white),
                         ),
-                      ),
+                      ), 1),
                       const SizedBox(height: 16),
-                      const Text(
+                      _buildAnimatedItem(const Text(
                         'Daftar Pelanggan',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontWeight: FontWeight.w900, fontSize: 22, color: Color(0xFF0F172A)),
-                      ),
+                      ), 2),
                       const SizedBox(height: 4),
-                      const Text(
+                      _buildAnimatedItem(const Text(
                         'Buat akun untuk memesan makanan mandiri',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
-                      ),
+                      ), 3),
                       const SizedBox(height: 28),
                       
-                      TextField(
+                      _buildAnimatedItem(TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(
                           labelText: 'Nama Lengkap',
                           hintText: 'Misal: Budi Santoso',
                           prefixIcon: Icon(Icons.badge_outlined),
                         ),
-                      ),
+                      ), 4),
                       const SizedBox(height: 14),
 
-                      TextField(
+                      _buildAnimatedItem(TextField(
                         controller: _userController,
                         decoration: const InputDecoration(
                           labelText: 'Username',
                           hintText: 'Misal: budi123',
                           prefixIcon: Icon(Icons.person_outline_rounded),
                         ),
-                      ),
+                      ), 5),
                       const SizedBox(height: 14),
 
-                      TextField(
+                      _buildAnimatedItem(TextField(
                         controller: _passController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
@@ -167,10 +189,10 @@ class _RegisterViewState extends State<RegisterView> {
                           ),
                         ),
                         onSubmitted: (_) => _handleRegister(),
-                      ),
+                      ), 6),
                       const SizedBox(height: 24),
 
-                      FilledButton(
+                      _buildAnimatedItem(FilledButton(
                         onPressed: isLoading ? null : _handleRegister,
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF4F46E5),
@@ -184,9 +206,9 @@ class _RegisterViewState extends State<RegisterView> {
                                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                               )
                             : const Text('Buat Akun Sekarang', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      ),
+                      ), 7),
                       const SizedBox(height: 16),
-                      Row(
+                      _buildAnimatedItem(Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text('Sudah punya akun? ', style: TextStyle(color: Color(0xFF64748B))),
@@ -195,7 +217,7 @@ class _RegisterViewState extends State<RegisterView> {
                             child: const Text('Login di sini', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
                           ),
                         ],
-                      ),
+                      ), 8),
                     ],
                   ),
                 ),
@@ -203,7 +225,6 @@ class _RegisterViewState extends State<RegisterView> {
             ),
           ),
         ),
-      ),
     );
   }
 }

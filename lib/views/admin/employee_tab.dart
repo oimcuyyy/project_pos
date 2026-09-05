@@ -4,7 +4,8 @@ import '../../../models/user_model.dart';
 import '../../../providers/employee_provider.dart';
 
 class EmployeeTab extends StatefulWidget {
-  const EmployeeTab({super.key});
+  final UserRole? roleFilter;
+  const EmployeeTab({super.key, this.roleFilter});
 
   @override
   State<EmployeeTab> createState() => _EmployeeTabState();
@@ -17,7 +18,11 @@ class _EmployeeTabState extends State<EmployeeTab> {
     final nameCtrl = TextEditingController(text: user?.name ?? '');
     final userCtrl = TextEditingController(text: user?.username ?? '');
     final passCtrl = TextEditingController();
-    String role = user != null ? (user.isAdmin ? 'admin' : 'cashier') : 'cashier';
+    String defaultRole = 'cashier';
+    if (widget.roleFilter == UserRole.admin) defaultRole = 'admin';
+    if (widget.roleFilter == UserRole.user) defaultRole = 'user';
+    
+    String role = user != null ? (user.isAdmin ? 'admin' : (user.isUser ? 'user' : 'cashier')) : defaultRole;
 
     showDialog(
       context: context,
@@ -46,6 +51,7 @@ class _EmployeeTabState extends State<EmployeeTab> {
                   initialValue: role,
                   decoration: const InputDecoration(labelText: 'Akses / Role'),
                   items: const [
+                    DropdownMenuItem(value: 'user', child: Text('User')),
                     DropdownMenuItem(value: 'cashier', child: Text('Kasir')),
                     DropdownMenuItem(value: 'admin', child: Text('Admin/Pemilik')),
                   ],
@@ -84,6 +90,15 @@ class _EmployeeTabState extends State<EmployeeTab> {
   Widget build(BuildContext context) {
     final prov = context.watch<EmployeeProvider>();
     
+    final filteredEmployees = widget.roleFilter == null 
+        ? prov.employees 
+        : prov.employees.where((e) => e.role == widget.roleFilter).toList();
+
+    String title = 'Daftar Akun Karyawan';
+    if (widget.roleFilter == UserRole.admin) title = 'Daftar Akun Admin';
+    if (widget.roleFilter == UserRole.cashier) title = 'Daftar Akun Kasir';
+    if (widget.roleFilter == UserRole.user) title = 'Daftar Akun User';
+
     return Column(
       children: [
         Padding(
@@ -91,10 +106,10 @@ class _EmployeeTabState extends State<EmployeeTab> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Daftar Akun Karyawan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               FilledButton.icon(
                 icon: const Icon(Icons.person_add),
-                label: const Text('Tambah Karyawan'),
+                label: const Text('Tambah Akun'),
                 onPressed: () => _showFormDialog(context),
               )
             ],
@@ -104,16 +119,16 @@ class _EmployeeTabState extends State<EmployeeTab> {
           child: prov.isLoading
             ? const Center(child: CircularProgressIndicator())
             : ListView.builder(
-                itemCount: prov.employees.length,
+                itemCount: filteredEmployees.length,
                 itemBuilder: (context, i) {
-                  final e = prov.employees[i];
+                  final e = filteredEmployees[i];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: e.isAdmin ? Colors.red.shade100 : Colors.blue.shade100,
-                      child: Icon(e.isAdmin ? Icons.admin_panel_settings : Icons.point_of_sale, color: e.isAdmin ? Colors.red : Colors.blue),
+                      backgroundColor: e.isAdmin ? Colors.red.shade100 : (e.isUser ? Colors.green.shade100 : Colors.blue.shade100),
+                      child: Icon(e.isAdmin ? Icons.admin_panel_settings : (e.isUser ? Icons.person : Icons.point_of_sale), color: e.isAdmin ? Colors.red : (e.isUser ? Colors.green : Colors.blue)),
                     ),
                     title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Username: ${e.username} • Role: ${e.isAdmin ? "Admin" : "Kasir"}'),
+                    subtitle: Text('Username: ${e.username} • Role: ${e.isAdmin ? "Admin" : (e.isUser ? "User" : "Kasir")}'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

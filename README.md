@@ -41,10 +41,15 @@ flutter pub get
 ```
 
 ### 3. Konfigurasi Backend (Supabase)
-Aplikasi ini sudah terhubung dengan Supabase. File konfigurasi berada di:
-`lib/config/supabase_config.dart`
+Jika Anda ingin menggunakan database milik Anda sendiri (Supabase):
+1. Buat proyek baru di [Supabase](https://supabase.com/).
+2. Buka menu **SQL Editor** di dashboard Supabase Anda.
+3. Buka file `database_schema.sql` yang ada di *root* folder proyek ini, lalu salin (*copy*) semua isinya.
+4. Tempel (*paste*) kode SQL tersebut ke Supabase SQL Editor dan jalankan (*RUN*). Perintah ini akan membuat semua tabel yang dibutuhkan (Produk, User, Transaksi, Shift, dll) beserta akun admin bawaan (Username: `admin`, Password: `admin123`).
+5. Buka `lib/config/supabase_config.dart` lalu ganti nilai `supabaseUrl` dan `supabaseAnonKey` dengan kredensial API dari dashboard Supabase Anda (Settings -> API).
+6. **🚨 KEAMANAN PENTING (Wajib Dilakukan)**: Pastikan Anda **mengaktifkan Row Level Security (RLS)** untuk semua tabel di dashboard Supabase. Atur kebijakan (Policies) agar hanya *Authenticated User* (Admin/Kasir yang login) yang dapat menambah/merubah/menghapus data. Jika tidak, database Anda bisa dimanipulasi dengan mudah oleh publik menggunakan *anon key*.
 
-*(Catatan: Kredensial URL dan Anon Key sudah dimasukkan ke dalam file tersebut. Jika Anda ingin menggunakan database Supabase Anda sendiri, silakan ganti nilai `supabaseUrl` dan `supabaseAnonKey` dengan kredensial dari dashboard Supabase Anda).*
+*(Catatan: Jika Anda tidak ingin repot, aplikasi sudah terhubung ke database demo bawaan secara default. Namun, data sewaktu-waktu bisa di-reset).*
 
 ### 4. Jalankan Aplikasi
 Untuk menjalankan aplikasi di *emulator* atau *perangkat asli*, ketik:

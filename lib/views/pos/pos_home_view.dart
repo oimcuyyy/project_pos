@@ -463,19 +463,7 @@ class _PosHomeViewState extends State<PosHomeView> {
                           const SizedBox(height: 4),
                           Builder(builder: (context) {
                             final currentSelected = selectedOptionsMap[groupName];
-                            return RadioGroup<String>(
-                              groupValue: currentSelected is Map ? currentSelected['name'] as String? : null,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  final matched = choices.firstWhere((c) => c is Map && c['name'] == val, orElse: () => null);
-                                  if (matched != null) {
-                                    setStateSB(() {
-                                      selectedOptionsMap[groupName] = matched;
-                                    });
-                                  }
-                                }
-                              },
-                              child: Column(
+                            return Column(
                               children: choices.map((choice) {
                                 if (choice is! Map) return const SizedBox.shrink();
                                 
@@ -492,12 +480,24 @@ class _PosHomeViewState extends State<PosHomeView> {
                                     ],
                                   ),
                                   value: choiceName,
+                                  // ignore: deprecated_member_use
+                                  groupValue: currentSelected is Map ? currentSelected['name'] as String? : null,
+                                  // ignore: deprecated_member_use
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      final matched = choices.firstWhere((c) => c is Map && c['name'] == val, orElse: () => null);
+                                      if (matched != null) {
+                                        setStateSB(() {
+                                          selectedOptionsMap[groupName] = matched;
+                                        });
+                                      }
+                                    }
+                                  },
                                   contentPadding: EdgeInsets.zero,
                                   visualDensity: VisualDensity.compact,
                                 );
                               }).toList(),
-                            ),
-                          );
+                            );
                         }),
                         const Divider(),
                         ],
@@ -1116,6 +1116,36 @@ class _AnimatedProductCardState extends State<_AnimatedProductCard> {
                               : const SizedBox.shrink(key: ValueKey(0)),
                         ),
                       ),
+
+                      // Varian Badge
+                      if (widget.item.options.isNotEmpty && !hasItemInCart)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange.shade300),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.tune_rounded, size: 10, color: Colors.orange.shade800),
+                                const SizedBox(width: 3),
+                                Text(
+                                  'Varian',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
                       // Out of stock overlay
                       if (widget.isOutOfStock)
