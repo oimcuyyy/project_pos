@@ -10,7 +10,7 @@ Aplikasi kasir (Point of Sale) modern yang dibangun menggunakan **Flutter** dan 
 - **Admin Dashboard**: Kelola inventaris produk, kategori, pelanggan, dan pegawai. Memantau laporan pendapatan harian/bulanan.
 - **Pembayaran QRIS Dinamis**: *Generate* kode QRIS sesuai total belanja langsung dari layar aplikasi.
 - **Cetak Struk**: Mendukung pencetakan struk langsung ke *Bluetooth Thermal Printer*.
-- **Otentikasi & Keamanan**: Login Admin/Kasir yang aman, auto-logout (Inactivity Wrapper), dan proteksi perangkat *Root/Jailbreak*.
+- **Otentikasi & Keamanan**: Login Admin/Kasir yang aman, auto-logout (Inactivity Wrapper), proteksi perangkat *Root/Jailbreak*, dan **Row Level Security (RLS)** pada database.
 
 ---
 
