@@ -108,7 +108,7 @@ class SettingsProvider with ChangeNotifier {
 
     try {
       final supabase = SupabaseConfig.client;
-      await supabase.from('store_settings').upsert(newSettings.toMap());
+      await supabase.from('store_settings').update(newSettings.toMap()).eq('id', newSettings.id);
       return true;
     } catch (e) {
       debugPrint('Update store settings full error: $e');
@@ -126,7 +126,7 @@ class SettingsProvider with ChangeNotifier {
           'use_kode_unik': newSettings.useKodeUnik,
           'qris_fee_percent': newSettings.qrisFeePercent,
         };
-        await SupabaseConfig.client.from('store_settings').upsert(coreMap);
+        await SupabaseConfig.client.from('store_settings').update(coreMap).eq('id', newSettings.id);
       } catch (_) {}
       return false;
     }

@@ -1995,6 +1995,23 @@ class _StoreSettingsTabState extends State<_StoreSettingsTab> {
   }
 
   @override
+  void didUpdateWidget(_StoreSettingsTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.settings.taxPercent != widget.settings.taxPercent) {
+      _taxCtrl.text = widget.settings.taxPercent.toInt().toString();
+    }
+    if (oldWidget.settings.serviceChargePercent != widget.settings.serviceChargePercent) {
+      _serviceCtrl.text = widget.settings.serviceChargePercent.toInt().toString();
+    }
+    if (oldWidget.settings.storeName != widget.settings.storeName) {
+      _nameCtrl.text = widget.settings.storeName;
+    }
+    if (oldWidget.settings.qrisString != widget.settings.qrisString) {
+      _qrisCtrl.text = widget.settings.qrisString;
+    }
+  }
+
+  @override
   void dispose() {
     _nameCtrl.dispose();
     _addressCtrl.dispose();
