@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../admin/admin_dashboard_view.dart';
 import '../auth/login_view.dart';
+import '../../main.dart';
 
 class MaintenanceLockView extends StatelessWidget {
   const MaintenanceLockView({super.key});
@@ -281,10 +282,13 @@ class MaintenanceLockView extends StatelessWidget {
                               'Kembali ke Halaman Login',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
-                            onPressed: () => Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (_) => const LoginView()),
-                            ),
+                            onPressed: () async {
+                              await auth.logout();
+                              globalNavigatorKey.currentState?.pushAndRemoveUntil(
+                                MaterialPageRoute(builder: (_) => const LoginView()),
+                                (route) => false,
+                              );
+                            },
                           ),
                         ),
                       ],
