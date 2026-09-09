@@ -86,7 +86,7 @@ class PosApp extends StatelessWidget {
       },
       child: MaterialApp(
         navigatorKey: globalNavigatorKey,
-        title: 'POS Kasir Pintar',
+        title: 'Corevia POS',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         builder: (context, child) {
