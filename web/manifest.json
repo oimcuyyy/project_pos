@@ -1,11 +1,11 @@
 {
-    "name": "project_pos",
-    "short_name": "project_pos",
+    "name": "Corevia POS",
+    "short_name": "Corevia",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F172A",
+    "theme_color": "#4F46E5",
+    "description": "Smart POS and Self-Service Kiosk",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
