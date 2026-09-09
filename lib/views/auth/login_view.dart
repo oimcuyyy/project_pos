@@ -128,16 +128,29 @@ class _LoginViewState extends State<LoginView> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.all(12),
+                                  width: 64,
+                                  height: 64,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF4F46E5),
                                     borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  child: const Icon(Icons.point_of_sale_rounded, color: Colors.white, size: 32),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Image.asset(
+                                      'assets/images/corevia_logo.jpg',
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(height: 24),
                                 const Text(
-                                  'SMART POS & SELF-SERVICE',
+                                  'COREVIA POS',
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w900,
@@ -194,17 +207,30 @@ class _LoginViewState extends State<LoginView> {
                         children: [
                           Center(
                             child: Container(
-                              padding: const EdgeInsets.all(14),
+                              width: 72,
+                              height: 72,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4F46E5),
                                 borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              child: const Icon(Icons.point_of_sale_rounded, size: 36, color: Colors.white),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.asset(
+                                  'assets/images/corevia_logo.jpg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
                           const Text(
-                            'SMART POS & KIOSK',
+                            'COREVIA POS',
                             textAlign: TextAlign.center,
                             style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: Color(0xFF0F172A)),
                           ),
