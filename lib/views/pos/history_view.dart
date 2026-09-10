@@ -378,13 +378,15 @@ class _HistoryViewState extends State<HistoryView> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
+                                    Wrap(
+                                      crossAxisAlignment: WrapCrossAlignment.center,
+                                      spacing: 6,
+                                      runSpacing: 4,
                                       children: [
                                         Text(
                                           tx.id,
                                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                         ),
-                                        const SizedBox(width: 8),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
@@ -400,8 +402,7 @@ class _HistoryViewState extends State<HistoryView> {
                                             ),
                                           ),
                                         ),
-                                        if (tx.paymentProofUrl != null && tx.paymentProofUrl!.isNotEmpty) ...[
-                                          const SizedBox(width: 6),
+                                        if (tx.paymentProofUrl != null && tx.paymentProofUrl!.isNotEmpty)
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                             decoration: BoxDecoration(
@@ -421,7 +422,6 @@ class _HistoryViewState extends State<HistoryView> {
                                               ],
                                             ),
                                           ),
-                                        ],
                                       ],
                                     ),
                                     const SizedBox(height: 4),

@@ -122,7 +122,9 @@ class _UserHomeViewState extends State<UserHomeView> {
                                   title: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(choiceName, style: const TextStyle(fontSize: 14)),
+                                      Expanded(
+                                        child: Text(choiceName, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                                      ),
                                       if (choicePrice > 0)
                                         Text('+${_currency.format(choicePrice)}', style: const TextStyle(fontSize: 12, color: Colors.green)),
                                     ],
@@ -210,7 +212,33 @@ class _UserHomeViewState extends State<UserHomeView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Menu Kami', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/corevia_logo.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Menu Kami', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+          ],
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,

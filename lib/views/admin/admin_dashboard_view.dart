@@ -440,32 +440,21 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
           : AppBar(
               title: Text(currentTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               actions: [
-                TextButton.icon(
-                  icon: const Icon(Icons.point_of_sale_rounded, size: 18),
-                  label: const Text('Mode Kasir'),
+                IconButton(
+                  icon: const Icon(Icons.point_of_sale_rounded),
+                  tooltip: 'Mode Kasir',
                   onPressed: () => Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const PosHomeView()),
                   ),
                 ),
-                TextButton.icon(
-                  icon: const Icon(Icons.phone_android_rounded, size: 18),
-                  label: const Text('Mode User'),
+                IconButton(
+                  icon: const Icon(Icons.phone_android_rounded),
+                  tooltip: 'Mode User',
                   onPressed: () => Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => const UserHomeView()),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout_rounded),
-                  tooltip: 'Logout',
-                  onPressed: () {
-                    auth.logout();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginView()),
-                    );
-                  },
                 ),
               ],
             ),
@@ -671,25 +660,36 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                      ),
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.storefront_rounded, color: Colors.white, size: 22),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/corevia_logo.jpg',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          storeName.isNotEmpty ? storeName : 'POS MANAGEMENT',
+                        const Text(
+                          'Corevia POS',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -932,32 +932,29 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       padding: const EdgeInsets.all(24),
       children: [
         // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
               children: [
-                Row(
-                  children: [
-                    Icon(
-                      isMaintenance ? Icons.security_rounded : Icons.shield_outlined,
-                      color: isMaintenance ? Colors.redAccent : const Color(0xFF4F46E5),
-                      size: 28,
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Kontrol Mode Maintenance',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), letterSpacing: -0.5),
-                    ),
-                  ],
+                Icon(
+                  isMaintenance ? Icons.security_rounded : Icons.shield_outlined,
+                  color: isMaintenance ? Colors.redAccent : const Color(0xFF4F46E5),
+                  size: 28,
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  'Saklar darurat untuk membekukan transaksi kasir seketika jika ada indikasi pembobolan atau audit keamanan.',
-                  style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Kontrol Mode Maintenance',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), letterSpacing: -0.5),
+                  ),
                 ),
               ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Saklar darurat untuk membekukan transaksi kasir seketika jika ada indikasi pembobolan atau audit keamanan.',
+              style: TextStyle(color: Color(0xFF64748B), fontSize: 13),
             ),
           ],
         ),
@@ -998,7 +995,10 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
                           Text(
                             'Status Sistem Kasir: ',
@@ -1109,10 +1109,13 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
               children: [
                 const Text('Informasi & Log Terakhir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF0F172A))),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
+                LayoutBuilder(builder: (context, constraints) {
+                  return Wrap(
+                    spacing: 14,
+                    runSpacing: 14,
+                    children: [
+                      Container(
+                        width: constraints.maxWidth > 500 ? (constraints.maxWidth - 14) / 2 : double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
@@ -1122,11 +1125,12 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
                               children: [
-                                Icon(Icons.person_pin_rounded, size: 16, color: Color(0xFF4F46E5)),
-                                SizedBox(width: 6),
-                                Text('Admin Penanggung Jawab', style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                                const Icon(Icons.person_pin_rounded, size: 16, color: Color(0xFF4F46E5)),
+                                const Text('Admin Penanggung Jawab', style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
                               ],
                             ),
                             const SizedBox(height: 6),
@@ -1137,10 +1141,8 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Container(
+                      Container(
+                        width: constraints.maxWidth > 500 ? (constraints.maxWidth - 14) / 2 : double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8FAFC),
@@ -1150,24 +1152,25 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 6,
                               children: [
-                                Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF0EA5E9)),
-                                SizedBox(width: 6),
-                                Text('Waktu Terakhir Diaktifkan', style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                                const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF4F46E5)),
+                                const Text('Waktu Tindakan', style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
                               ],
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              formattedTime.isNotEmpty && formattedTime != '-' ? '$formattedTime WIB' : 'Belum pernah diaktifkan',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Color(0xFF0F172A)),
+                              formattedTime,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0F172A)),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 20),
                 const Text('Pesan Pengumuman untuk Kasir:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF334155))),
                 const SizedBox(height: 6),
@@ -1252,44 +1255,43 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
               ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isSmall = constraints.maxWidth < 600;
+                
+                final textAndBadge = Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 6,
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Halo, ${auth.currentUser?.name ?? 'Admin'} 👋',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                        const SizedBox(width: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: (shiftProv.isShiftOpen ? Colors.green : Colors.orange).withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            shiftProv.isShiftOpen ? 'KASIR AKTIF' : 'SHIFT KASIR DITUTUP',
-                            style: TextStyle(
-                              color: shiftProv.isShiftOpen ? Colors.greenAccent : Colors.orangeAccent,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Halo, ${auth.currentUser?.name ?? 'Admin'} 👋',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Ringkasan real-time performa kasir, transaksi harian, dan inventaris toko Anda.',
-                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: (shiftProv.isShiftOpen ? Colors.green : Colors.orange).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        shiftProv.isShiftOpen ? 'KASIR AKTIF' : 'SHIFT KASIR DITUTUP',
+                        style: TextStyle(
+                          color: shiftProv.isShiftOpen ? Colors.greenAccent : Colors.orangeAccent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                FilledButton.icon(
+                );
+                
+                final description = const Text(
+                  'Ringkasan real-time performa kasir, transaksi harian, dan inventaris toko Anda.',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                );
+                
+                final actionButton = FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -1297,8 +1299,39 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Menu Baru', style: TextStyle(fontWeight: FontWeight.bold)),
                   onPressed: () => _showProductFormDialog(context),
-                ),
-              ],
+                );
+
+                if (isSmall) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      textAndBadge,
+                      const SizedBox(height: 6),
+                      description,
+                      const SizedBox(height: 12),
+                      actionButton,
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          textAndBadge,
+                          const SizedBox(height: 6),
+                          description,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    actionButton,
+                  ],
+                );
+              },
             ),
           ),
           const SizedBox(height: 20),
@@ -1313,7 +1346,7 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 14,
                 crossAxisSpacing: 14,
-                childAspectRatio: isNarrow ? 1.4 : 1.7,
+                childAspectRatio: isNarrow ? 1.0 : 1.6,
                 children: [
                   _buildStaggeredMetricCard(
                     index: 0,
@@ -1367,20 +1400,32 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Peringatan Stok Kritis (${lowStockItems.length} Produk)',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.red.shade900),
-                          ),
-                        ],
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.error_outline_rounded, color: Colors.red.shade700, size: 22),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Peringatan Stok Kritis (${lowStockItems.length} Produk)',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.red.shade900),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       TextButton(
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         onPressed: () => setState(() => _selectedNavIndex = 1),
-                        child: const Text('Kelola Semua Stok →'),
+                        child: const Text('Kelola Stok →', style: TextStyle(fontSize: 13)),
                       )
                     ],
                   ),
@@ -1519,13 +1564,14 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
                     const Text('5 Transaksi Terkini Hari Ini', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     TextButton(
                       onPressed: () => setState(() => _selectedNavIndex = 4),
-                      child: const Text('Lihat Semua Transaksi →'),
+                      child: const Text('Semua Transaksi →', style: TextStyle(fontSize: 13)),
                     )
                   ],
                 ),
@@ -1632,51 +1678,55 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title, 
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title, 
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 18, color: accentColor),
+                )
+              ],
+            ),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), letterSpacing: -0.3),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle, 
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Icon(icon, size: 18, color: accentColor),
-              )
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), letterSpacing: -0.3),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle, 
-                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          )
-        ],
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -1695,51 +1745,104 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
         padding: const EdgeInsets.all(24),
         children: [
           // Top Action Bar
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Cari menu atau kategori...',
-                    prefixIcon: const Icon(Icons.search, size: 20),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+          LayoutBuilder(builder: (context, constraints) {
+            final isNarrow = constraints.maxWidth < 600;
+            if (isNarrow) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari menu atau kategori...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    ),
+                    onChanged: (val) => setState(() => _productSearchQuery = val),
                   ),
-                  onChanged: (val) => setState(() => _productSearchQuery = val),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F46E5),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Menu Baru', style: TextStyle(fontWeight: FontWeight.bold)),
+                          onPressed: () => _showProductFormDialog(context),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.category_outlined, size: 18),
+                          label: const Text('Kategori'),
+                          onPressed: () => _showAddCategoryDialog(context),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Cari menu atau kategori...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                    ),
+                    onChanged: (val) => setState(() => _productSearchQuery = val),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF4F46E5),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                const SizedBox(width: 10),
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF4F46E5),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Menu Baru', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: () => _showProductFormDialog(context),
                 ),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Menu Baru', style: TextStyle(fontWeight: FontWeight.bold)),
-                onPressed: () => _showProductFormDialog(context),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.category_outlined, size: 18),
+                  label: const Text('Kategori'),
+                  onPressed: () => _showAddCategoryDialog(context),
                 ),
-                icon: const Icon(Icons.category_outlined, size: 18),
-                label: const Text('Kategori'),
-                onPressed: () => _showAddCategoryDialog(context),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
           const SizedBox(height: 16),
 
           // Metrics Quick Card
-          Row(
-            children: [
-              Expanded(
-                child: Container(
+          LayoutBuilder(builder: (context, constraints) {
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                Container(
+                  width: constraints.maxWidth > 400 ? (constraints.maxWidth - 10) / 2 : double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -1755,10 +1858,8 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
+                Container(
+                  width: constraints.maxWidth > 400 ? (constraints.maxWidth - 10) / 2 : double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -1777,9 +1878,9 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }),
           const SizedBox(height: 16),
 
           // List Produk
@@ -2054,7 +2155,7 @@ class _StoreSettingsTabState extends State<_StoreSettingsTab> {
           maxLines: 2,
           decoration: InputDecoration(
             labelText: 'Pesan Footer Struk',
-            hintText: 'Misal: Terima kasih atas kunjungannya! Follow @kopinusantara',
+            hintText: 'Misal: Terima kasih atas kunjungannya! Follow @corevia',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),

@@ -282,9 +282,10 @@ class MaintenanceLockView extends StatelessWidget {
                               'Kembali ke Halaman Login',
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
-                            onPressed: () async {
-                              await auth.logout();
-                              globalNavigatorKey.currentState?.pushAndRemoveUntil(
+                            onPressed: () {
+                              final nav = globalNavigatorKey.currentState;
+                              auth.logout();
+                              nav?.pushAndRemoveUntil(
                                 MaterialPageRoute(builder: (_) => const LoginView()),
                                 (route) => false,
                               );

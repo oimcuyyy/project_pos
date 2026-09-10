@@ -838,7 +838,7 @@ class _UserPaymentViewState extends State<UserPaymentView> with SingleTickerProv
                                 child: ListTile(
                                   leading: Icon(Icons.account_balance, color: Color(0xFF4F46E5)),
                                   title: Text('BCA Virtual Account', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  subtitle: Text('8801 2938 1029 4812 (a.n. Kopi Nusantara)'),
+                                  subtitle: Text('8801 2938 1029 4812 (a.n. Corevia)'),
                                 ),
                               ),
                               const SizedBox(height: 20),

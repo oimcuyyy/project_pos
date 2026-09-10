@@ -18,7 +18,7 @@ class StoreSettingsModel {
 
   StoreSettingsModel({
     this.id = 1,
-    this.storeName = 'Kopi Nusantara POS',
+    this.storeName = 'Corevia POS',
     this.address = 'Jl. Raya Kopi No. 12, Jakarta',
     this.phone = '0812-3456-7890',
     this.footerMessage = 'Terima kasih atas kunjungan Anda!',
@@ -55,7 +55,7 @@ class StoreSettingsModel {
   factory StoreSettingsModel.fromMap(Map<String, dynamic> map) {
     return StoreSettingsModel(
       id: (map['id'] as num?)?.toInt() ?? 1,
-      storeName: map['store_name']?.toString() ?? 'Kopi Nusantara POS',
+      storeName: map['store_name']?.toString() ?? 'Corevia POS',
       address: map['address']?.toString() ?? 'Jl. Raya Kopi No. 12, Jakarta',
       phone: map['phone']?.toString() ?? '0812-3456-7890',
       footerMessage: map['footer_message']?.toString() ?? 'Terima kasih atas kunjungan Anda!',

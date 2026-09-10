@@ -474,7 +474,9 @@ class _PosHomeViewState extends State<PosHomeView> {
                                   title: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(choiceName, style: const TextStyle(fontSize: 14)),
+                                      Expanded(
+                                        child: Text(choiceName, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+                                      ),
                                       if (choicePrice > 0)
                                         Text('+${currency.format(choicePrice)}', style: const TextStyle(fontSize: 12, color: Colors.green)),
                                     ],
@@ -565,46 +567,69 @@ class _PosHomeViewState extends State<PosHomeView> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.point_of_sale_rounded, color: Color(0xFF4F46E5), size: 22),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/images/corevia_logo.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text('KASIR POS', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Flexible(
+                        child: Text(
+                          'COREVIA POS', 
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      child: const Row(
-                        children: [
-                          _PulseDot(color: Colors.green, size: 7),
-                          SizedBox(width: 5),
-                          Text('ONLINE', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
-                        ],
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _PulseDot(color: Colors.green, size: 7),
+                            SizedBox(width: 5),
+                            Text('ONLINE', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 10)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Text(
-                  '${user?.name ?? 'Kasir'} • ${shiftProv.isShiftOpen ? "Shift Aktif" : "Shift Belum Dibuka"}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: shiftProv.isShiftOpen ? Colors.green.shade700 : Colors.orange.shade700,
-                    fontWeight: FontWeight.bold,
+                    ],
                   ),
-                ),
-              ],
+                  Text(
+                    '${user?.name ?? 'Kasir'} • ${shiftProv.isShiftOpen ? "Shift Aktif" : "Shift Belum Dibuka"}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: shiftProv.isShiftOpen ? Colors.green.shade700 : Colors.orange.shade700,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -636,7 +661,7 @@ class _PosHomeViewState extends State<PosHomeView> {
             ),
 
           // Shift Kasir Quick Action Button
-          ActionChip(
+          isWideScreen ? ActionChip(
             avatar: Icon(
               shiftProv.isShiftOpen ? Icons.storefront_rounded : Icons.lock_clock_rounded,
               color: shiftProv.isShiftOpen ? Colors.green : Colors.orange,
@@ -654,6 +679,13 @@ class _PosHomeViewState extends State<PosHomeView> {
             side: BorderSide(
               color: (shiftProv.isShiftOpen ? Colors.green : Colors.orange).withValues(alpha: 0.3),
             ),
+            onPressed: _showShiftManagementDialog,
+          ) : IconButton(
+            icon: Icon(
+              shiftProv.isShiftOpen ? Icons.storefront_rounded : Icons.lock_clock_rounded,
+              color: shiftProv.isShiftOpen ? Colors.green : Colors.orange,
+            ),
+            tooltip: shiftProv.isShiftOpen ? 'Shift Aktif' : 'Buka Shift',
             onPressed: _showShiftManagementDialog,
           ),
           const SizedBox(width: 6),

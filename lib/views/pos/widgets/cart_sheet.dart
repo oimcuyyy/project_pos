@@ -598,10 +598,11 @@ class CartSheet extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Total Pembayaran', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Total Pembayaran', style: TextStyle(fontSize: 12, color: Color(0xFF64748B))),
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 250),
                             transitionBuilder: (child, animation) => FadeTransition(
@@ -618,6 +619,7 @@ class CartSheet extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
                       ),
                       FilledButton.icon(
                         style: FilledButton.styleFrom(

@@ -97,7 +97,7 @@ void main() {
     test('Maintenance mode attributes serialize and deserialize correctly', () {
       final now = DateTime.now();
       final settings = StoreSettingsModel(
-        storeName: 'Cafe Nusantara',
+        storeName: 'Corevia POS',
         isMaintenance: true,
         maintenanceAdminName: 'Admin Budi',
         maintenanceStartedAt: now,

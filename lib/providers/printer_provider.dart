@@ -69,7 +69,7 @@ class PrinterProvider with ChangeNotifier {
   /// Format & Kirim Data ke Thermal Printer 58mm
   Future<bool> printReceipt(
     TransactionModel tx, {
-    String storeName = "Kopi Nusantara POS",
+    String storeName = "Corevia POS",
     String address = "Jl. Raya Kopi No. 12, Jakarta",
     String phone = "0812-3456-7890",
     String footerMessage = "Terima kasih atas kunjungan Anda!",
@@ -83,7 +83,7 @@ class PrinterProvider with ChangeNotifier {
     final dateStr = DateFormat('dd/MM/yyyy HH:mm').format(tx.dateTime);
 
     // ESC/POS Formatting: size (0=Normal, 1=Medium, 2=Large), align (0=Left, 1=Center, 2=Right)
-    _bluetooth.printCustom(storeName, 2, 1);
+    _bluetooth.printCustom("Corevia POS", 2, 1);
     if (address.isNotEmpty) _bluetooth.printCustom(address, 0, 1);
     if (phone.isNotEmpty) _bluetooth.printCustom("Telp: $phone", 0, 1);
     _bluetooth.printCustom("--------------------------------", 1, 1);

@@ -113,7 +113,7 @@ class _ReceiptViewState extends State<ReceiptView> {
               ),
               child: Column(
                 children: [
-                  Text(settings.storeName, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  const Text('Corevia POS', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 2),
                   Text(settings.address, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                   Text('Telp: ${settings.phone}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: Colors.grey)),
