@@ -10,6 +10,8 @@ import '../../providers/product_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../providers/employee_provider.dart';
+import '../../providers/customer_provider.dart';
 import '../../utils/qris_helper.dart';
 import '../../models/user_model.dart';
 import '../auth/login_view.dart';
@@ -40,6 +42,12 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
     _maintenanceMessageCtrl = TextEditingController(
       text: 'Sistem kasir dan transaksi sedang dibekukan sementara untuk pemeliharaan keamanan atau audit darurat.',
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<EmployeeProvider>().fetchEmployees();
+        context.read<CustomerProvider>().fetchCustomers();
+      }
+    });
   }
 
   @override
@@ -897,13 +905,13 @@ class _AdminDashboardViewState extends State<AdminDashboardView> {
       case 4:
         return const HistoryView();
       case 5:
-        return const CustomerTab();
+        return const CustomerTab(key: ValueKey('customer_tab'));
       case 6:
-        return const EmployeeTab(roleFilter: UserRole.admin);
+        return const EmployeeTab(key: ValueKey('admin_tab'), roleFilter: UserRole.admin);
       case 7:
-        return const EmployeeTab(roleFilter: UserRole.cashier);
+        return const EmployeeTab(key: ValueKey('cashier_tab'), roleFilter: UserRole.cashier);
       case 8:
-        return const EmployeeTab(roleFilter: UserRole.user);
+        return const EmployeeTab(key: ValueKey('user_tab'), roleFilter: UserRole.user);
       case 9:
         return _StoreSettingsTab(settings: settingsProv.settings, onSave: (updated) => settingsProv.updateSettings(updated));
       case 10:

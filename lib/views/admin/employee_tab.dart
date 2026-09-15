@@ -12,6 +12,17 @@ class EmployeeTab extends StatefulWidget {
 }
 
 class _EmployeeTabState extends State<EmployeeTab> {
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<EmployeeProvider>().fetchEmployees();
+      }
+    });
+  }
 
   void _showFormDialog(BuildContext context, {UserModel? user}) {
     final isEditing = user != null;
@@ -24,11 +35,16 @@ class _EmployeeTabState extends State<EmployeeTab> {
     
     String role = user != null ? (user.isAdmin ? 'admin' : (user.isUser ? 'user' : 'cashier')) : defaultRole;
 
+    String roleLabel = 'Karyawan';
+    if (widget.roleFilter == UserRole.admin) roleLabel = 'Admin';
+    if (widget.roleFilter == UserRole.cashier) roleLabel = 'Kasir';
+    if (widget.roleFilter == UserRole.user) roleLabel = 'User / Pelanggan';
+
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Karyawan' : 'Tambah Karyawan Baru'),
+          title: Text(isEditing ? 'Edit Akun $roleLabel' : 'Tambah Akun $roleLabel Baru'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -51,7 +67,7 @@ class _EmployeeTabState extends State<EmployeeTab> {
                   initialValue: role,
                   decoration: const InputDecoration(labelText: 'Akses / Role'),
                   items: const [
-                    DropdownMenuItem(value: 'user', child: Text('User')),
+                    DropdownMenuItem(value: 'user', child: Text('User (Pelanggan)')),
                     DropdownMenuItem(value: 'cashier', child: Text('Kasir')),
                     DropdownMenuItem(value: 'admin', child: Text('Admin/Pemilik')),
                   ],
@@ -90,60 +106,139 @@ class _EmployeeTabState extends State<EmployeeTab> {
   Widget build(BuildContext context) {
     final prov = context.watch<EmployeeProvider>();
     
-    final filteredEmployees = widget.roleFilter == null 
-        ? prov.employees 
-        : prov.employees.where((e) => e.role == widget.roleFilter).toList();
+    final filteredEmployees = prov.employees.where((e) {
+      final matchesRole = widget.roleFilter == null || e.role == widget.roleFilter;
+      if (!matchesRole) return false;
+      if (_searchQuery.isEmpty) return true;
+      final q = _searchQuery.toLowerCase();
+      return e.name.toLowerCase().contains(q) || e.username.toLowerCase().contains(q);
+    }).toList();
 
     String title = 'Daftar Akun Karyawan';
     if (widget.roleFilter == UserRole.admin) title = 'Daftar Akun Admin';
     if (widget.roleFilter == UserRole.cashier) title = 'Daftar Akun Kasir';
-    if (widget.roleFilter == UserRole.user) title = 'Daftar Akun User';
+    if (widget.roleFilter == UserRole.user) title = 'Daftar Akun User / Pelanggan';
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              FilledButton.icon(
-                icon: const Icon(Icons.person_add),
-                label: const Text('Tambah Akun'),
-                onPressed: () => _showFormDialog(context),
-              )
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded),
+                        tooltip: 'Segarkan Data',
+                        onPressed: prov.isLoading ? null : () => prov.fetchEmployees(),
+                      ),
+                      const SizedBox(width: 8),
+                      FilledButton.icon(
+                        icon: const Icon(Icons.person_add),
+                        label: const Text('Tambah Akun'),
+                        onPressed: () => _showFormDialog(context),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Cari nama atau username akun...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                        )
+                      : null,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                onChanged: (val) => setState(() => _searchQuery = val.trim()),
+              ),
             ],
           ),
         ),
         Expanded(
           child: prov.isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                itemCount: filteredEmployees.length,
-                itemBuilder: (context, i) {
-                  final e = filteredEmployees[i];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: e.isAdmin ? Colors.red.shade100 : (e.isUser ? Colors.green.shade100 : Colors.blue.shade100),
-                      child: Icon(e.isAdmin ? Icons.admin_panel_settings : (e.isUser ? Icons.person : Icons.point_of_sale), color: e.isAdmin ? Colors.red : (e.isUser ? Colors.green : Colors.blue)),
-                    ),
-                    title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Username: ${e.username} • Role: ${e.isAdmin ? "Admin" : (e.isUser ? "User" : "Kasir")}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showFormDialog(context, user: e),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => prov.deleteEmployee(e.id),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+            : RefreshIndicator(
+                onRefresh: () => prov.fetchEmployees(),
+                child: filteredEmployees.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.4,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.person_off_outlined, size: 54, color: Colors.grey.shade400),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _searchQuery.isNotEmpty
+                                        ? 'Tidak ditemukan akun dengan kata kunci "$_searchQuery"'
+                                        : 'Belum ada akun yang terdaftar.',
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  OutlinedButton.icon(
+                                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                                    label: const Text('Segarkan Sekarang'),
+                                    onPressed: () => prov.fetchEmployees(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: filteredEmployees.length,
+                        itemBuilder: (context, i) {
+                          final e = filteredEmployees[i];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: e.isAdmin ? Colors.red.shade100 : (e.isUser ? Colors.green.shade100 : Colors.blue.shade100),
+                              child: Icon(
+                                e.isAdmin ? Icons.admin_panel_settings : (e.isUser ? Icons.person : Icons.point_of_sale),
+                                color: e.isAdmin ? Colors.red : (e.isUser ? Colors.green : Colors.blue),
+                              ),
+                            ),
+                            title: Text(e.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text('Username: ${e.username} • Role: ${e.isAdmin ? "Admin" : (e.isUser ? "User (Pelanggan)" : "Kasir")}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showFormDialog(context, user: e),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => prov.deleteEmployee(e.id),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
         ),
       ],

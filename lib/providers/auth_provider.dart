@@ -126,6 +126,19 @@ class AuthProvider with ChangeNotifier {
         'role': 'user',
       });
 
+      // Sinkronkan ke tabel customers agar terbaca di Data Pelanggan & POS
+      try {
+        final existingCust = await supabase.from('customers').select('id').eq('name', name).maybeSingle();
+        if (existingCust == null) {
+          await supabase.from('customers').insert({
+            'name': name,
+            'points': 0,
+          });
+        }
+      } catch (custErr) {
+        debugPrint('Sync customer record error (ignored): $custErr');
+      }
+
       _isLoading = false;
       notifyListeners();
       return true;

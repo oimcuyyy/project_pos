@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/employee_provider.dart';
+import '../../providers/customer_provider.dart';
 import '../admin/admin_dashboard_view.dart';
 import '../maintenance/maintenance_lock_view.dart';
 import '../pos/pos_home_view.dart';
@@ -34,6 +36,9 @@ class _LoginViewState extends State<LoginView> {
 
     if (!mounted) return;
     if (success) {
+      context.read<EmployeeProvider>().fetchEmployees();
+      context.read<CustomerProvider>().fetchCustomers();
+
       if (auth.currentUser!.role == UserRole.admin) {
         Navigator.pushReplacement(
           context,

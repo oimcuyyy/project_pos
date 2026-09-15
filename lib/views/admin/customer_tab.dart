@@ -13,6 +13,16 @@ class CustomerTab extends StatefulWidget {
 class _CustomerTabState extends State<CustomerTab> {
   String _searchQuery = '';
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CustomerProvider>().fetchCustomers();
+      }
+    });
+  }
+
   void _showFormDialog(BuildContext context, {CustomerModel? customer}) {
     final isEditing = customer != null;
     final nameCtrl = TextEditingController(text: customer?.name ?? '');
@@ -100,12 +110,25 @@ class _CustomerTabState extends State<CustomerTab> {
                   decoration: InputDecoration(
                     hintText: 'Cari nama / no HP pelanggan...',
                     prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () => setState(() => _searchQuery = ''),
+                          )
+                        : null,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
                   onChanged: (val) => setState(() => _searchQuery = val),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.refresh_rounded),
+                tooltip: 'Segarkan Data',
+                onPressed: prov.isLoading ? null : () => prov.fetchCustomers(),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 icon: const Icon(Icons.person_add),
                 label: const Text('Tambah Pelanggan'),
@@ -117,31 +140,72 @@ class _CustomerTabState extends State<CustomerTab> {
         Expanded(
           child: prov.isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (context, i) {
-                  final c = filtered[i];
-                  return ListTile(
-                    leading: CircleAvatar(child: Text(c.name[0].toUpperCase())),
-                    title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('${c.phone ?? "No HP Kosong"} • Poin: ${c.points}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () => _showFormDialog(context, customer: c),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            prov.deleteCustomer(c.id);
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
+            : RefreshIndicator(
+                onRefresh: () => prov.fetchCustomers(),
+                child: filtered.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.4,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.people_outline_rounded, size: 54, color: Colors.grey.shade400),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _searchQuery.isNotEmpty
+                                        ? 'Tidak ditemukan pelanggan dengan kata kunci "$_searchQuery"'
+                                        : 'Belum ada data pelanggan.',
+                                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 14),
+                                  OutlinedButton.icon(
+                                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                                    label: const Text('Segarkan Sekarang'),
+                                    onPressed: () => prov.fetchCustomers(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, i) {
+                          final c = filtered[i];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                              child: Text(
+                                c.name.isNotEmpty ? c.name[0].toUpperCase() : '?',
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4F46E5)),
+                              ),
+                            ),
+                            title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                            subtitle: Text('${c.phone ?? "No HP Kosong"} • Poin: ${c.points}'),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showFormDialog(context, customer: c),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    prov.deleteCustomer(c.id);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
               ),
         ),
       ],

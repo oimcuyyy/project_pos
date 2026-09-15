@@ -32,7 +32,7 @@ class MaintenanceLockView extends StatelessWidget {
       backgroundColor: const Color(0xFF0A0E1A),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 620),
             child: TweenAnimationBuilder<double>(
@@ -55,7 +55,7 @@ class MaintenanceLockView extends StatelessWidget {
                   side: BorderSide(color: Colors.redAccent.shade700.withValues(alpha: 0.5), width: 1.5),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(36),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -99,13 +99,16 @@ class MaintenanceLockView extends StatelessWidget {
                           children: [
                             Icon(Icons.lock_rounded, size: 14, color: Colors.redAccent),
                             SizedBox(width: 6),
-                            Text(
-                              'SECURITY LOCKDOWN • MODE MAINTENANCE AKTIF',
-                              style: TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.8,
+                            Flexible(
+                              child: Text(
+                                'SECURITY LOCKDOWN • MODE MAINTENANCE AKTIF',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                           ],
@@ -172,6 +175,7 @@ class MaintenanceLockView extends StatelessWidget {
                             // Admin Pengaktif
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Row(
                                   children: [
@@ -180,15 +184,19 @@ class MaintenanceLockView extends StatelessWidget {
                                     Text('Diaktifkan Oleh:', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
                                   ],
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1E293B),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    '$adminName (Admin)',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF1E293B),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '$adminName (Admin)',
+                                      textAlign: TextAlign.right,
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                    ),
                                   ),
                                 ),
                               ],
@@ -198,6 +206,7 @@ class MaintenanceLockView extends StatelessWidget {
                             // Waktu Pengaktifan
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Row(
                                   children: [
@@ -206,9 +215,13 @@ class MaintenanceLockView extends StatelessWidget {
                                     Text('Waktu Pengaktifan:', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12)),
                                   ],
                                 ),
-                                Text(
-                                  '$formattedTime WIB',
-                                  style: const TextStyle(color: Color(0xFFCBD5E1), fontWeight: FontWeight.bold, fontSize: 11),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    '$formattedTime WIB',
+                                    textAlign: TextAlign.right,
+                                    style: const TextStyle(color: Color(0xFFCBD5E1), fontWeight: FontWeight.bold, fontSize: 11),
+                                  ),
                                 ),
                               ],
                             ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/employee_provider.dart';
+import '../../providers/customer_provider.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -76,6 +78,9 @@ class _RegisterViewState extends State<RegisterView> with SingleTickerProviderSt
 
     if (!mounted) return;
     if (success) {
+      context.read<EmployeeProvider>().fetchEmployees();
+      context.read<CustomerProvider>().fetchCustomers();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pendaftaran berhasil! Silakan login.'),
