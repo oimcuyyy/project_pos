@@ -1,3 +1,5 @@
+apply(from = "namespace.gradle")
+
 allprojects {
     repositories {
         google()

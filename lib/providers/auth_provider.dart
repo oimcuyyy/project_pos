@@ -79,18 +79,8 @@ class AuthProvider with ChangeNotifier {
           .maybeSingle();
 
       if (res != null) {
-        // Implementasi Device Binding Logic di Client-Side (sebaiknya di RPC Server)
-        final boundDeviceId = res['bound_device_id']?.toString();
-        
-        if (boundDeviceId == null || boundDeviceId.isEmpty) {
-          // Binding pertama kali
-          await supabase.from('users').update({'bound_device_id': deviceId}).eq('id', res['id']);
-        } else if (boundDeviceId != deviceId) {
-          _errorMessage = "Akun ini telah terikat dengan perangkat lain!";
-          _isLoading = false;
-          notifyListeners();
-          return false;
-        }
+        // Perbarui bound_device_id dengan perangkat yang sedang aktif digunakan
+        await supabase.from('users').update({'bound_device_id': deviceId}).eq('id', res['id']);
 
         _currentUser = UserModel.fromMap(res);
         await SecureStorageService.saveUserId(_currentUser!.id);
@@ -149,6 +139,16 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    try {
+      if (_currentUser != null) {
+        await SupabaseConfig.client
+            .from('users')
+            .update({'bound_device_id': null})
+            .eq('id', _currentUser!.id);
+      }
+    } catch (e) {
+      debugPrint('Logout unbind error: $e');
+    }
     _currentUser = null;
     await SecureStorageService.clearUserSession();
     notifyListeners();
